@@ -6,7 +6,9 @@
   "scripts": {
     "compile": "yarn hardhat compile",
     "prettier": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
-    "check": "yarn hardhat check"
+    "check": "yarn hardhat check",
+    "test": "yarn hardhat test",
+    "console": "yarn hardhat console --network"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
@@ -32,7 +34,6 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.3",
-    "add": "^2.0.6",
-    "yarn": "^1.22.19"
+    "@openzeppelin/hardhat-upgrades": "^2.2.0"
   }
 }
