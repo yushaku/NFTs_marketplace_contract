@@ -7,12 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 //This function instantiates the contract and
 //classifies ERC20 for storage schema
 contract PoliteCatToken is ERC20 {
-  //Feel free to change the initial supply of 50 token
-  //Keep the (10**18) unchanged as it multiplies the number we want as our supply to have 18 decimal
+  //Feel free to change the initial supply of 50 * 10^18 token
   uint constant _initial_supply = 50 * (10 ** 18);
 
-  // make sure to replace the "Buildoooor" reference
-  //with your own ERC-20 name
+  // make sure to replace the "PoliteCatToken" reference with your own ERC-20 name
   constructor() ERC20("PoliteCatToken", "PCT") {
     _mint(msg.sender, _initial_supply);
   }
