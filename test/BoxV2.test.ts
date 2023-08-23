@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { BoxV2 } from "../typechain-types";
+import { BoxV2 } from "../typechain";
 
 describe("Box V2", function () {
   let boxV2: BoxV2;
