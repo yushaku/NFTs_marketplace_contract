@@ -7,6 +7,7 @@
     "compile": "yarn hardhat compile",
     "prettier": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "deploy:local": "npx hardhat --network localhost run",
+    "deploy:sepolia": "npx hardhat --network sepolia run",
     "check": "yarn hardhat check",
     "test": "yarn hardhat test",
     "console": "yarn hardhat console --network",

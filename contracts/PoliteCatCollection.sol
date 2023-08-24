@@ -10,27 +10,35 @@ contract NFTCollectible is ERC721Enumerable, Ownable {
   using SafeMath for uint256;
   using Counters for Counters.Counter;
 
-  Counters.Counter private _tokenIds;
+  Counters.Counter private _tokenCount;
 
-  uint public constant MAX_SUPPLY = 100;
-  uint public constant PRICE = 0.01 ether;
-  uint public constant MAX_PER_MINT = 5;
+  uint public immutable MAX_SUPPLY;
+  uint public immutable PRICE;
+  uint public immutable MAX_PER_MINT;
 
   string public baseTokenURI;
 
-  constructor(string memory baseURI) ERC721("Polite cat connection", "PCC") {
+  constructor(
+    string memory baseURI,
+    uint _max_supply,
+    uint _price,
+    uint _max_per_mint
+  ) ERC721("Polite cat connection", "PCC") {
     setBaseURI(baseURI);
+    MAX_PER_MINT = _max_per_mint;
+    PRICE = _price;
+    MAX_SUPPLY = _max_supply;
   }
 
-  function reserveNFTs() public onlyOwner {
-    uint totalMinted = _tokenIds.current();
+  function reserveNFTs(uint8 _num) public onlyOwner {
+    uint totalMinted = _tokenCount.current();
 
     require(
-      totalMinted.add(10) < MAX_SUPPLY,
+      totalMinted.add(_num) < MAX_SUPPLY,
       "Not enough NFTs left to reserve"
     );
 
-    for (uint i = 0; i < 10; i++) {
+    for (uint i = 0; i < _num; i++) {
       _mintSingleNFT();
     }
   }
@@ -44,7 +52,7 @@ contract NFTCollectible is ERC721Enumerable, Ownable {
   }
 
   function mintNFTs(uint _count) public payable {
-    uint totalMinted = _tokenIds.current();
+    uint totalMinted = _tokenCount.current();
 
     require(totalMinted.add(_count) <= MAX_SUPPLY, "Not enough NFTs left!");
     require(
@@ -62,9 +70,9 @@ contract NFTCollectible is ERC721Enumerable, Ownable {
   }
 
   function _mintSingleNFT() private {
-    uint newTokenID = _tokenIds.current();
+    uint newTokenID = _tokenCount.current();
     _safeMint(msg.sender, newTokenID);
-    _tokenIds.increment();
+    _tokenCount.increment();
   }
 
   function tokensOfOwner(address _owner) external view returns (uint[] memory) {
@@ -85,4 +93,3 @@ contract NFTCollectible is ERC721Enumerable, Ownable {
     require(success, "Transfer failed.");
   }
 }
-
