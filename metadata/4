@@ -1,0 +1,12 @@
+{
+  "name": "lovely cat",
+  "description": "Description of image",
+  "image": "https://ipfs.io/ipfs/QmZQoJJuyheSdPkvFr61tJ2QcCZ3MtevzcK43YvDhdnHzN",
+  "attributes": [
+    {
+      "trait_type": "Eye color",
+      "value": "Blue"
+    }
+  ]
+}
+

@@ -1,0 +1,11 @@
+{
+  "name": "angry cat",
+  "description": "Description of image",
+  "image": "https://ipfs.io/ipfs/QmbMvQPVfLM2akLuUerF3ytPtXfWVhfWP1LxBL21zpVz22",
+  "attributes": [
+    {
+      "trait_type": "Eye color",
+      "value": "Blue"
+    }
+  ]
+}
