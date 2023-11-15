@@ -1,7 +1,5 @@
 import { ethers } from "hardhat";
 import { verifyContract, writeDownAddress } from "./utils/helper";
-import { resolve } from "path";
-import { getAddress } from "ethers";
 
 const PRICE = ethers.parseEther("0.01");
 const MAX_SUPPLY = 100;
@@ -15,10 +13,10 @@ async function main() {
   const nft = await CatNFT.deploy("yushaku", MAX_SUPPLY, PRICE, MAX_PER_MINT);
 
   const address = await nft.getAddress();
+  // const address = getAddress("NFTCollectible");
   writeDownAddress("NFTCollectible", address);
 
   await new Promise((resolve) => setTimeout(resolve, 25_000));
-  // const address = getAddress("NFTCollectible");
   await verifyContract(address, ["yushaku", MAX_SUPPLY, PRICE, MAX_PER_MINT]);
 }
 

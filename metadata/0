@@ -1,0 +1,11 @@
+{
+  "name": "Agree cat",
+  "description": "Description of image",
+  "image": "https://ipfs.io/ipfs/QmdBAAFWtSvHTxNYCJTmRy8SM7d5jeprSqr4Yigjsvebxm",
+  "attributes": [
+    {
+      "trait_type": "Eye color",
+      "value": "Blue"
+    }
+  ]
+}
