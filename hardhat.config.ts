@@ -10,6 +10,8 @@ const {
   ETHERSCAN_API_KEY = "",
   ALCHEMY_API_SEPOLIA = "",
   ALCHEMY_API_GOERLI = "",
+  ALCHEMY_API_MAINET = "",
+  KEY_ARBITRUM_MAINNET = "",
   COIN_MARKETCAP_API_KEY = "",
   REPORT_GAS = false,
 } = process.env;
@@ -20,10 +22,6 @@ const config: HardhatUserConfig = {
     outDir: "./typechain",
   },
   networks: {
-    ropsten: {
-      url: "",
-      accounts: [WALLET_PRIVATE_KEY],
-    },
     sepolia: {
       url: ALCHEMY_API_SEPOLIA,
       chainId: 11155111,
@@ -32,6 +30,21 @@ const config: HardhatUserConfig = {
     goerli: {
       url: ALCHEMY_API_GOERLI,
       chainId: 5,
+      accounts: [`0x${WALLET_PRIVATE_KEY}`],
+    },
+    mainnet: {
+      url: ALCHEMY_API_MAINET,
+      chainId: 1,
+      accounts: [`0x${WALLET_PRIVATE_KEY}`],
+    },
+    arbitrum: {
+      url: KEY_ARBITRUM_MAINNET,
+      chainId: 42161,
+      accounts: [`0x${WALLET_PRIVATE_KEY}`],
+    },
+    nautilus: {
+      url: "https://api.nautilus.nautchain.xyz",
+      chainId: 22222,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
   },

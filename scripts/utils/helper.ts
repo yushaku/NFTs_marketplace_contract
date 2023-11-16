@@ -1,5 +1,5 @@
 import fs from "fs";
-import { ethers, run } from "hardhat";
+import { run } from "hardhat";
 import "@nomicfoundation/hardhat-ethers";
 
 export const writeDownAddress = async (key: string, address: string) => {
@@ -33,35 +33,3 @@ export const verifyContract = async (contractAddress: string, args?: any[]) => {
     }
   }
 };
-
-function getEnvVariable(key: string, defaultValue?: string) {
-  if (process.env[key]) {
-    return process.env[key] as string;
-  }
-
-  return defaultValue ? defaultValue : "";
-}
-
-// Helper method for fetching a connection provider to the Ethereum network
-function getProvider() {
-  return ethers.getDefaultProvider(getEnvVariable("NETWORK", "rinkeby"), {
-    alchemy: getEnvVariable("ALCHEMY_KEY"),
-  });
-}
-
-function getAccount() {
-  return new ethers.Wallet(
-    getEnvVariable("ACCOUNT_PRIVATE_KEY"),
-    getProvider()
-  );
-}
-
-export function getContract(contractName: string, hre: any) {
-  const account = getAccount();
-  return getContractAt(
-    hre,
-    contractName,
-    getEnvVariable("NFT_CONTRACT_ADDRESS"),
-    account
-  );
-}

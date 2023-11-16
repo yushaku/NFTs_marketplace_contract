@@ -2,19 +2,27 @@ import { ethers } from "hardhat";
 import { getAddress, verifyContract, writeDownAddress } from "./utils/helper";
 
 async function main() {
-  // const [deployer] = await ethers.getSigners();
-  // console.log("Deploying contracts with the account:", deployer.address);
+  const network = await ethers.provider.getNetwork();
+  console.log(`${network.name}_yushaku_erc20`);
+  console.log("Network chain id=", network.chainId);
 
-  // const token = await ethers.deployContract("Yushaku");
+  const [deployer] = await ethers.getSigners();
 
-  // console.log("get address");
-  // const address = await token.getAddress();
-  // // writeDownAddress("sepolia_yushaku_erc20", address);
-  // writeDownAddress("goerli_yushaku_erc20", address);
+  console.log("Deploying contracts with the account:", deployer.address);
+  const token = await ethers.deployContract("Yushaku");
 
-  // await new Promise((resolve) => setTimeout(resolve, 25_000));
-  // const address = getAddress("goerli_yushaku_erc20");
-  const address = getAddress("sepolia_yushaku_erc20");
+  console.log("get address");
+  const address = await token.getAddress();
+  writeDownAddress(`${network.name}_yushaku_erc20`, address);
+}
+
+export async function verify() {
+  const network = await ethers.provider.getNetwork();
+  console.log(`${network.name}_yushaku_erc20`);
+  console.log(`Network chain id= ${network.chainId}`);
+
+  await new Promise((resolve) => setTimeout(resolve, 1_000));
+  const address = getAddress(`${network.name}_yushaku_erc20`);
   await verifyContract(address, []);
 }
 
