@@ -8,16 +8,18 @@ dotenv.config();
 const {
   WALLET_PRIVATE_KEY = "",
   ETHERSCAN_API_KEY = "",
+  ARBITRUM_API_KEY = "",
+  BNB_API_KEY = "",
   ALCHEMY_API_SEPOLIA = "",
   ALCHEMY_API_GOERLI = "",
   ALCHEMY_API_MAINET = "",
-  KEY_ARBITRUM_MAINNET = "",
   COIN_MARKETCAP_API_KEY = "",
+  INFURA_KEY = "",
   REPORT_GAS = false,
 } = process.env;
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.20",
+  solidity: "0.8.19",
   typechain: {
     outDir: "./typechain",
   },
@@ -38,8 +40,28 @@ const config: HardhatUserConfig = {
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
     arbitrum: {
-      url: KEY_ARBITRUM_MAINNET,
+      url: `https://arbitrum-mainnet.infura.io/v3/${INFURA_KEY}`,
       chainId: 42161,
+      accounts: [`0x${WALLET_PRIVATE_KEY}`],
+    },
+    arbitrum_goerli: {
+      url: `https://arbitrum-goerli.infura.io/v3/${INFURA_KEY}`,
+      chainId: 421613,
+      accounts: [`0x${WALLET_PRIVATE_KEY}`],
+    },
+    arbitrum_sepolia: {
+      url: `https://arbitrum-sepolia.infura.io/v3/${INFURA_KEY}`,
+      chainId: 421614,
+      accounts: [`0x${WALLET_PRIVATE_KEY}`],
+    },
+    bnb: {
+      url: "https://binance.llamarpc.com",
+      chainId: 56,
+      accounts: [`0x${WALLET_PRIVATE_KEY}`],
+    },
+    bnb_testnet: {
+      url: "https://bsc-testnet.publicnode.com",
+      chainId: 97,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
     nautilus: {
@@ -49,7 +71,7 @@ const config: HardhatUserConfig = {
     },
   },
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey: BNB_API_KEY || ARBITRUM_API_KEY || ETHERSCAN_API_KEY,
   },
   gasReporter: {
     enabled: Boolean(REPORT_GAS),
