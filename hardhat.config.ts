@@ -30,7 +30,7 @@ const config: HardhatUserConfig = {
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
     goerli: {
-      url: ALCHEMY_API_GOERLI,
+      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
       chainId: 5,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
