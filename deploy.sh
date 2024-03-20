@@ -1,14 +1,6 @@
 #! /bin/bash
 
-function deploy() {
-	# npx hardhat --network sepolia run scripts/deploy_yushaku.ts
-	npx hardhat --network goerli run scripts/deploy_yushaku.ts
-	# npx hardhat --network arbitrum run scripts/deploy_yushaku.ts
-	# npx hardhat --network nautilus run scripts/deploy_yushaku.ts
-	# npx hardhat --network arbitrum run scripts/deploy_yushaku.ts
-	# npx hardhat --network arbitrum_goerli run scripts/deploy_yushaku.ts
-	# npx hardhat --network bnb_testnet run scripts/deploy_yushaku.ts
-	# npx hardhat --network bnb run scripts/deploy_yushaku.ts
-}
+network=bnb_testnet
 
-deploy
+# npx hardhat --network $network run scripts/deploy_yushaku.ts
+pnpm hardhat --network $network run ./scripts/deployNFT.ts

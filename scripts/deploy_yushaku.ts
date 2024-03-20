@@ -26,7 +26,7 @@ export async function verify() {
   await verifyContract(address, []);
 }
 
-main()
+verify()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error({ error });

@@ -37,7 +37,7 @@ describe("Token contract", function () {
     it("should fail: not enough ether", async function () {
       const { nft, owner } = await loadFixture(deployNFT);
       await expect(nft.connect(owner).mintNFTs(1)).to.be.revertedWith(
-        "Not enough ether to purchase NFTs."
+        "Not enough ether to purchase NFTs.",
       );
     });
   });

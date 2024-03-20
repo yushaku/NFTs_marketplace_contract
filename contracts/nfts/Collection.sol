@@ -13,20 +13,16 @@ contract NFTCollectible is ERC721Enumerable, Ownable {
   Counters.Counter private _tokenCount;
 
   uint public immutable MAX_SUPPLY;
-  uint public immutable PRICE;
-  uint public immutable MAX_PER_MINT;
 
   string public baseTokenURI;
 
   constructor(
     string memory baseURI,
     uint _max_supply,
-    uint _price,
-    uint _max_per_mint
-  ) ERC721("Polite cat connection", "PCC") {
+    string memory _name,
+    string memory _symbol
+  ) ERC721(_name, _symbol) {
     setBaseURI(baseURI);
-    MAX_PER_MINT = _max_per_mint;
-    PRICE = _price;
     MAX_SUPPLY = _max_supply;
   }
 
@@ -55,15 +51,6 @@ contract NFTCollectible is ERC721Enumerable, Ownable {
     uint totalMinted = _tokenCount.current();
 
     require(totalMinted.add(_count) <= MAX_SUPPLY, "Not enough NFTs left!");
-    require(
-      _count > 0 && _count <= MAX_PER_MINT,
-      "Cannot mint specified number of NFTs."
-    );
-    require(
-      msg.value >= PRICE.mul(_count),
-      "Not enough ether to purchase NFTs."
-    );
-
     for (uint i = 0; i < _count; i++) {
       _mintSingleNFT();
     }

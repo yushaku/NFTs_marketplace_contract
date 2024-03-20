@@ -1,12 +1,1 @@
-{
-  "name": "lovely cat",
-  "description": "Description of image",
-  "image": "https://ipfs.io/ipfs/QmZQoJJuyheSdPkvFr61tJ2QcCZ3MtevzcK43YvDhdnHzN",
-  "attributes": [
-    {
-      "trait_type": "Eye color",
-      "value": "Blue"
-    }
-  ]
-}
-
+{"name":"gundam-4","description":"Brilliant spell-slinger and magical with cryptography. Often uses Jewles in her h-index potions. ","image":"ipfs://bafybeigjo7vswkssnmoii6e5rif6srbc7xyqmdvxxlyo37zokst4dnmlka//gun4.mp4","attributes":[{"trait_type":"Strength","value":33},{"trait_type":"Dexterity","value":96},{"trait_type":"Constitution","value":45},{"trait_type":"Intelligence","value":51},{"trait_type":"Wisdom","value":70},{"trait_type":"Charisma","value":33},{"trait_type":"Experience","value":0}]}
