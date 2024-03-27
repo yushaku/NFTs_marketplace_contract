@@ -76,7 +76,7 @@ contract NFTCollectible is ERC721Enumerable, Ownable {
     uint balance = address(this).balance;
     require(balance > 0, "No ether left to withdraw");
 
-    (bool success, ) = (msg.sender).call{value: balance}("");
+    (bool success, ) = (msg.sender).call{ value: balance }("");
     require(success, "Transfer failed.");
   }
 }
