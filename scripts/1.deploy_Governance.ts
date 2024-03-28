@@ -1,6 +1,8 @@
 import { ethers } from "hardhat";
 import { getAddress, verifyContract, writeDownAddress } from "./utils/helper";
 import { sleep } from "./utils/sleep";
+import { YuGovernor, Yushaku__factory } from "../typechain";
+import { ZERO_ADDRESS, config } from "./utils/config";
 
 async function main(step: number) {
   const network = await ethers.provider.getNetwork();
@@ -8,42 +10,35 @@ async function main(step: number) {
   console.log(`Network ${network.name} - ${network.chainId}`);
   console.log("Deploying contracts with the account:", deployer.address);
 
-  let tkAddress = "";
-  let usdAddress = "";
+  let governorAddress = "";
+  let yuGovernor: YuGovernor;
 
   if (step <= 1) {
-    console.log("step 1: deploy yushaku_erc20");
-    const token = await ethers.deployContract("Yushaku");
-    tkAddress = await token.getAddress();
-    writeDownAddress(`yushaku_erc20`, tkAddress, network.name);
+    console.log("step 1: Deploy Governor");
+    yuGovernor = await ethers.deployContract("YuGovernor", [
+      ZERO_ADDRESS,
+      config.VOTING_DELAY_BLOCKS,
+      deployer.address,
+    ]);
+    governorAddress = await yuGovernor.getAddress();
+    writeDownAddress(`YuGovernor`, governorAddress, network.name);
   } else {
-    tkAddress = getAddress(`yushaku_erc20`, network.name);
+    governorAddress = getAddress(`YuGovernor`, network.name);
+    yuGovernor = new Yushaku__factory(deployer).attach(governorAddress) as any;
   }
 
   await sleep(30 * 1000);
-  await verify(step);
-}
-
-export async function verify(step = 1) {
-  const network = await ethers.provider.getNetwork();
-  const tkAddress = getAddress(`yushaku_erc20`, network.name);
-  const usdAddress = getAddress(`usdt`, network.name);
-  const stAddress = getAddress(`stake_module`, network.name);
 
   if (step <= 1) {
-    await verifyContract(tkAddress, []);
-  }
-
-  if (step <= 2) {
-    await verifyContract(usdAddress, []);
-  }
-
-  if (step <= 3) {
-    await verifyContract(stAddress, [tkAddress]);
+    verifyContract(governorAddress, [
+      ZERO_ADDRESS,
+      config.VOTING_DELAY_BLOCKS,
+      deployer.address,
+    ]);
   }
 }
 
-main(2)
+main(1)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error({ error });

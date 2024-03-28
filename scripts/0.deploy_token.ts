@@ -1,6 +1,9 @@
 import { ethers } from "hardhat";
 import { getAddress, verifyContract, writeDownAddress } from "./utils/helper";
 import { sleep } from "./utils/sleep";
+import { config } from "./utils/config";
+
+const { YSK } = config;
 
 async function main(step: number) {
   const network = await ethers.provider.getNetwork();
@@ -13,53 +16,45 @@ async function main(step: number) {
 
   if (step <= 1) {
     console.log("step 1: deploy yushaku_erc20");
-    const token = await ethers.deployContract("Yushaku");
+    const token = await ethers.deployContract("Yushaku", [
+      deployer.address,
+      YSK.MINTING_RESTRICTED_BEFORE,
+      YSK.MINT_MAX_PERCENT,
+    ]);
     tkAddress = await token.getAddress();
-    writeDownAddress(`yushaku_erc20`, tkAddress, network.name);
+    writeDownAddress(`YuToken`, tkAddress, network.name);
   } else {
-    tkAddress = getAddress(`yushaku_erc20`, network.name);
+    tkAddress = getAddress(`YuToken`, network.name);
   }
 
   if (step <= 2) {
     console.log("step 2: deploy USDT");
     const token = await ethers.deployContract("USDT");
     usdAddress = await token.getAddress();
-    writeDownAddress(`usdt`, usdAddress, network.name);
+    writeDownAddress(`USDT`, usdAddress, network.name);
   } else {
-    usdAddress = getAddress(`usdt`, network.name);
-  }
-
-  if (step <= 3) {
-    console.log("step 2: deploy staking module");
-    const stake = await ethers.deployContract("YuStaking", [tkAddress]);
-    const stakingAddress = await stake.getAddress();
-    writeDownAddress(`stake_module`, stakingAddress, network.name);
+    usdAddress = getAddress(`USDT`, network.name);
   }
 
   await sleep(30 * 1000);
-  await verify(step);
-}
-
-export async function verify(step = 1) {
-  const network = await ethers.provider.getNetwork();
-  const tkAddress = getAddress(`yushaku_erc20`, network.name);
-  const usdAddress = getAddress(`usdt`, network.name);
-  const stAddress = getAddress(`stake_module`, network.name);
+  // ---------------------------- verify statement  ------------------------------
 
   if (step <= 1) {
-    await verifyContract(tkAddress, []);
+    console.log("step 3: verify Yushaku Token");
+    await verifyContract(tkAddress, [
+      deployer.address,
+      YSK.MINTING_RESTRICTED_BEFORE,
+      YSK.MINT_MAX_PERCENT,
+    ]);
   }
 
   if (step <= 2) {
+    console.log("step 4: verify USDT");
     await verifyContract(usdAddress, []);
-  }
-
-  if (step <= 3) {
-    await verifyContract(stAddress, [tkAddress]);
   }
 }
 
-main(2)
+main(1)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error({ error });
