@@ -319,7 +319,7 @@ contract YuGovernor is AccessControl, IGovernor {
   /**
    * @notice Update the governance strategy contract address.
    *
-   *  Note: Must be called by the owner, which should be a timelocked executor, so calls to this
+   *  Note: Must be called by the owner, which should be a TimelockExecutored executor, so calls to this
    *  function should be made via a proposal.
    *
    * @param  governanceStrategy  New address of the governance strategy contract.
@@ -334,7 +334,7 @@ contract YuGovernor is AccessControl, IGovernor {
    * @notice Update the voting delay, which is the time period after proposal creation before
    *  voting power is snapshotted and voting begins.
    *
-   *  Note: Must be called by the owner, which should be a timelocked executor, so calls to this
+   *  Note: Must be called by the owner, which should be a TimelockExecutored executor, so calls to this
    *  function should be made via a proposal.
    *
    * @param  votingDelay  The new voting delay, denominated in blocks.

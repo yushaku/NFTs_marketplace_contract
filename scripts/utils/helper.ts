@@ -1,9 +1,10 @@
 import fs from "fs";
 import { run } from "hardhat";
 import "@nomicfoundation/hardhat-ethers";
+import { ContractName } from "./config";
 
 export const writeDownAddress = async (
-  key: string,
+  key: ContractName,
   address: string,
   network: string = "mainnet",
 ) => {
@@ -21,7 +22,7 @@ export const writeDownAddress = async (
   }
 };
 
-export const getAddress = (key: string, network: string = "mainnet") => {
+export const getAddress = (key: ContractName, network: string = "mainnet") => {
   const rawData = fs.readFileSync(`./deployed_address/${network}.json`);
   const object = JSON.parse(rawData.toString());
   return object[key];
@@ -34,7 +35,7 @@ export const verifyContract = async (contractAddress: string, args?: any[]) => {
       address: contractAddress,
       constructorArguments: args,
     });
-    console.log("deploy successfully");
+    console.log("verified successfully");
   } catch (e: any) {
     if (e.message.toLowerCase().includes("already verified")) {
       console.log("Already verified!");

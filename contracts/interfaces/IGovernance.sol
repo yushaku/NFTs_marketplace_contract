@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-pragma abicoder v2;
 
 import { IExecutor } from "./IExecutor.sol";
 
@@ -66,7 +65,7 @@ interface IGovernor {
    * @dev emitted when a new proposal is created
    * @param id Id of the proposal
    * @param creator address of the creator
-   * @param executor The ExecutorWithTimelock contract that will execute the proposal
+   * @param executor The TimelockExecutor contract that will execute the proposal
    * @param targets list of contracts called by proposal's associated transactions
    * @param values list of value in wei for each propoposal's associated transaction
    * @param signatures list of function signatures (can be empty) to be used when created the callData
@@ -147,7 +146,7 @@ interface IGovernor {
 
   /**
    * @dev Creates a Proposal (needs Proposition Power of creator > Threshold)
-   * @param executor The ExecutorWithTimelock contract that will execute the proposal
+   * @param executor The ExecutorWithTimelockExecutor contract that will execute the proposal
    * @param targets list of contracts called by proposal's associated transactions
    * @param values list of value in wei for each propoposal's associated transaction
    * @param signatures list of function signatures (can be empty) to be used when created the callData
@@ -208,14 +207,14 @@ interface IGovernor {
 
   /**
    * @dev Set new GovernanceStrategy
-   * Note: owner should be a timelocked executor, so needs to make a proposal
+   * Note: owner should be a TimelockExecutored executor, so needs to make a proposal
    * @param governanceStrategy new Address of the GovernanceStrategy contract
    **/
   function setGovernanceStrategy(address governanceStrategy) external;
 
   /**
    * @dev Set new Voting Delay (delay before a newly created proposal can be voted on)
-   * Note: owner should be a timelocked executor, so needs to make a proposal
+   * Note: owner should be a TimelockExecutored executor, so needs to make a proposal
    * @param votingDelay new voting delay in seconds
    **/
   function setVotingDelay(uint256 votingDelay) external;

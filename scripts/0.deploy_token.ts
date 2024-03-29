@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { getAddress, verifyContract, writeDownAddress } from "./utils/helper";
 import { sleep } from "./utils/sleep";
-import { config } from "./utils/config";
+import { ContractName, config } from "./utils/config";
 
 const { YSK } = config;
 
@@ -22,22 +22,23 @@ async function main(step: number) {
       YSK.MINT_MAX_PERCENT,
     ]);
     tkAddress = await token.getAddress();
-    writeDownAddress(`YuToken`, tkAddress, network.name);
+    writeDownAddress(ContractName.YuToken, tkAddress, network.name);
   } else {
-    tkAddress = getAddress(`YuToken`, network.name);
+    tkAddress = getAddress(ContractName.YuToken, network.name);
   }
 
   if (step <= 2) {
     console.log("step 2: deploy USDT");
     const token = await ethers.deployContract("USDT");
     usdAddress = await token.getAddress();
-    writeDownAddress(`USDT`, usdAddress, network.name);
+    writeDownAddress(ContractName.USDT, usdAddress, network.name);
   } else {
-    usdAddress = getAddress(`USDT`, network.name);
+    usdAddress = getAddress(ContractName.USDT, network.name);
   }
 
-  await sleep(30 * 1000);
   // ---------------------------- verify statement  ------------------------------
+
+  await sleep(30 * 1000);
 
   if (step <= 1) {
     console.log("step 3: verify Yushaku Token");
@@ -54,7 +55,7 @@ async function main(step: number) {
   }
 }
 
-main(1)
+main(2)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error({ error });
