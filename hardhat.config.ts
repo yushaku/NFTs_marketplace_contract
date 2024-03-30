@@ -11,7 +11,7 @@ const {
   ARBITRUM_API_KEY = "",
   BNB_API_KEY = "",
   ALCHEMY_API_SEPOLIA = "",
-  ALCHEMY_API_GOERLI = "",
+  POLYGON_SCAN = "",
   ALCHEMY_API_MAINET = "",
   COIN_MARKETCAP_API_KEY = "",
   INFURA_KEY = "",
@@ -64,14 +64,20 @@ const config: HardhatUserConfig = {
       chainId: 97,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
-    nautilus: {
-      url: "https://api.nautilus.nautchain.xyz",
-      chainId: 22222,
+    mumbai: {
+      url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
+      chainId: 80001,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
   },
   etherscan: {
-    apiKey: BNB_API_KEY || ARBITRUM_API_KEY || ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: ETHERSCAN_API_KEY!,
+      sepolia: ETHERSCAN_API_KEY!,
+      polygonMumbai: POLYGON_SCAN!,
+      bsc_testnet: BNB_API_KEY!,
+      arbitrum: ARBITRUM_API_KEY!,
+    },
   },
   gasReporter: {
     enabled: Boolean(REPORT_GAS),

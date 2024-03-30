@@ -15,6 +15,7 @@ async function main(step: number) {
   const network = await ethers.provider.getNetwork();
   const [deployer] = await ethers.getSigners();
   console.log(`Network ${network.name} - ${network.chainId}`);
+  console.log("Deploying contracts with the account:", deployer.address);
 
   let governorAddress = "";
   let yuGovernor: YuGovernor;
@@ -82,7 +83,7 @@ async function main(step: number) {
   await sleep(30 * 1000);
 
   if (step <= 4) {
-    await verifyContract(governorAddress, [
+    verifyContract(governorAddress, [
       ZERO_ADDRESS,
       config.VOTING_DELAY_BLOCKS,
       deployer.address,
@@ -90,7 +91,7 @@ async function main(step: number) {
   }
 
   if (step <= 5) {
-    await verifyContract(await shortTimeLockexecutor.getAddress(), [
+    verifyContract(await shortTimeLockexecutor.getAddress(), [
       governorAddress,
       SHORT_TIMELOCK.DELAY,
       SHORT_TIMELOCK.GRACE_PERIOD,
@@ -104,7 +105,7 @@ async function main(step: number) {
   }
 
   if (step <= 6) {
-    await verifyContract(await longTimeLockexecutor.getAddress(), [
+    verifyContract(await longTimeLockexecutor.getAddress(), [
       governorAddress,
       LONG_TIMELOCK.DELAY,
       LONG_TIMELOCK.GRACE_PERIOD,
@@ -118,7 +119,7 @@ async function main(step: number) {
   }
 }
 
-main(5)
+main(0)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error({ error });

@@ -1,0 +1,8 @@
+#! /bin/bash
+
+network=mumbai
+
+# YuGovernance
+pnpm hardhat --network $network \
+	verify 0x72AdfC957D8e6E021B690E9D5db1DFFB4381013b \
+	'0x0000000000000000000000000000000000000000' 50 '0x4aBfCf64bB323CC8B65e2E69F2221B14943C6EE1'

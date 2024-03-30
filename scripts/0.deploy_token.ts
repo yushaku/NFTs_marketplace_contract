@@ -55,7 +55,7 @@ async function main(step: number) {
   }
 }
 
-main(2)
+main(1)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error({ error });

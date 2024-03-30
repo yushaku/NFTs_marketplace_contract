@@ -1,5 +1,5 @@
 import fs from "fs";
-import { run } from "hardhat";
+import hre from "hardhat";
 import "@nomicfoundation/hardhat-ethers";
 import { ContractName } from "./config";
 
@@ -28,11 +28,16 @@ export const getAddress = (key: ContractName, network: string = "mainnet") => {
   return object[key];
 };
 
-export const verifyContract = async (contractAddress: string, args?: any[]) => {
-  console.log("Verifying contract...");
+export const verifyContract = async (address: string, args?: any[]) => {
+  console.log("VERIFYING CONTRACT");
+  console.log({
+    address,
+    args,
+  });
+
   try {
-    await run("verify:verify", {
-      address: contractAddress,
+    await hre.run("verify:verify", {
+      address,
       constructorArguments: args,
     });
     console.log("verified successfully");
