@@ -46,6 +46,7 @@
     "dotenv": "^16.3.1",
     "form-data": "^4.0.0",
     "fs": "^0.0.1-security",
-    "luxon": "^3.4.4"
+    "luxon": "^3.4.4",
+    "signers": "link:@nomiclabs/hardhat-ethers/signers"
   }
 }

@@ -15,11 +15,19 @@ const {
   ALCHEMY_API_MAINET = "",
   COIN_MARKETCAP_API_KEY = "",
   INFURA_KEY = "",
-  REPORT_GAS = false,
+  REPORT_GAS = true,
 } = process.env;
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.19",
+  solidity: {
+    version: "0.8.19",
+    settings: {
+      optimizer: {
+        enabled: true,
+        // runs: 1,
+      },
+    },
+  },
   typechain: {
     outDir: "./typechain",
   },

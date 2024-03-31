@@ -29,6 +29,9 @@ dependencies:
   luxon:
     specifier: ^3.4.4
     version: 3.4.4
+  signers:
+    specifier: link:@nomiclabs/hardhat-ethers/signers
+    version: link:@nomiclabs/hardhat-ethers/signers
 
 devDependencies:
   '@nomicfoundation/hardhat-chai-matchers':
