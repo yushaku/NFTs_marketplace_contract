@@ -12,6 +12,7 @@ export enum ContractName {
   YuGovernor = "YuGovernor",
   ShortExecutor = "ShortExecutor",
   LongExecutor = "LongExecutor",
+  NftFactory = "NftFactory",
 }
 
 export const config = {

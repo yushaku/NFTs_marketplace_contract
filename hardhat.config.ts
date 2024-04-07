@@ -83,7 +83,7 @@ const config: HardhatUserConfig = {
       mainnet: ETHERSCAN_API_KEY!,
       sepolia: ETHERSCAN_API_KEY!,
       polygonMumbai: POLYGON_SCAN!,
-      bsc_testnet: BNB_API_KEY!,
+      bscTestnet: BNB_API_KEY!,
       arbitrum: ARBITRUM_API_KEY!,
     },
   },
