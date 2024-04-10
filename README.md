@@ -11,12 +11,13 @@ npx hardhat node
 npx hardhat run scripts/deploy.ts
 ```
 
-## smart contract address
+## 🚀 Features of NFTs Marketplace
 
-- proxyAddress: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-- implementAddress: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-- adminAddress: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-- tokenErc20: "0xbB959b9bdB2788981Cdc3DD3a8F314b9b3cA69Be",
-- NFTCollectible: "0xb863F00Dd2e6f066F8Ec84014c6df61EEC41Ef1A",
-- sepolia_yushaku_erc20: "0xc1fEF08ab001a88Ee1196b896F28bB2534a4295d",
-- goerli_yushaku_erc20: "0x461d35B87F3271c42bE1f553930aeddda6c2F53b"
+- 🔨 Create a new ERC721 collection.
+- ⛽ Support setting royalty fees.
+- ⭐ Sell (list item) NFT on the marketplace.
+- 🌟 Offer listed items on the marketplace.
+- ✨ Accept an offer on the marketplace.
+- 💥 Create an auction on the marketplace.
+- 🔥 Bid place to auction.
+- 🏰 (Marketplace owner) Support set and update payable token, platform fee.
