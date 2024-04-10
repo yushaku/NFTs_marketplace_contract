@@ -13,6 +13,7 @@ export enum ContractName {
   ShortExecutor = "ShortExecutor",
   LongExecutor = "LongExecutor",
   NftFactory = "NftFactory",
+  NftMarket = "NftMarket",
 }
 
 export const config = {
