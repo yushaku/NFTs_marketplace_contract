@@ -11,7 +11,7 @@ contract NftFactory {
     string memory name,
     string memory symbol,
     uint128 _royaltyBps
-  ) public {
+  ) public returns (address) {
     NFTCollection newCollecion = new NFTCollection(
       msg.sender,
       name,
@@ -23,6 +23,8 @@ contract NftFactory {
     getCollecion[msg.sender].push(address(nftAddress));
 
     emit createCollection(msg.sender, name, address(newCollecion));
+
+    return nftAddress;
   }
 
   function list(address owner) public view returns (address[] memory) {

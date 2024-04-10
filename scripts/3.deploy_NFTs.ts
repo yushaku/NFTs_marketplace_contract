@@ -30,7 +30,7 @@ async function main(step = 1) {
   }
 }
 
-main(2)
+main(1)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error({ error });
