@@ -21,3 +21,7 @@ npx hardhat run scripts/deploy.ts
 - 💥 Create an auction on the marketplace.
 - 🔥 Bid place to auction.
 - 🏰 (Marketplace owner) Support set and update payable token, platform fee.
+
+
+ipfs://bafybeicobaxdgv3zfirzxr5sj7ynkpyex76q75ccjorm4fit6stuo64ype
+https://api.pudgypenguins.io/lil/

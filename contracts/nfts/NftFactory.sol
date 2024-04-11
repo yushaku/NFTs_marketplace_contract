@@ -2,8 +2,15 @@
 pragma solidity ^0.8.0;
 import "./NFTCollection.sol";
 
-contract NftFactory {
-  mapping(address => address[]) public getCollecion;
+interface IFactory {
+  function list(address owner) external view returns (address[] memory);
+
+  function isMakeByFactory(address collection) external view returns (bool);
+}
+
+contract NftFactory is IFactory {
+  mapping(address => address[]) public user_collections;
+  mapping(address => bool) public collectionList;
 
   event createCollection(address from, string name, address nft);
 
@@ -20,14 +27,19 @@ contract NftFactory {
       _royaltyBps
     );
     address nftAddress = address(newCollecion);
-    getCollecion[msg.sender].push(address(nftAddress));
+    user_collections[msg.sender].push(address(nftAddress));
+    collectionList[address(nftAddress)] = true;
 
     emit createCollection(msg.sender, name, address(newCollecion));
 
     return nftAddress;
   }
 
-  function list(address owner) public view returns (address[] memory) {
-    return getCollecion[owner];
+  function list(address owner) external view returns (address[] memory) {
+    return user_collections[owner];
+  }
+
+  function isMakeByFactory(address collection) external view returns (bool) {
+    return collectionList[collection];
   }
 }

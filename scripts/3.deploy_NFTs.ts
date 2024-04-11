@@ -28,9 +28,16 @@ async function main(step = 1) {
   }
 
   if (step <= 2) {
-    nftMarket = await new MPFactory(deployer).deploy(20, deployer.address);
+    nftMarket = await new MPFactory(deployer).deploy(
+      20,
+      deployer.address,
+      await nftFactory.getAddress(),
+    );
     const address = await nftMarket.getAddress();
     writeDownAddress(ContractName.NftMarket, address, network.name);
+  } else {
+    const address = getAddress(ContractName.NftMarket, network.name);
+    nftMarket = new MPFactory().attach(address) as YuNftMarketplace;
   }
 
   await new Promise((resolve) => setTimeout(resolve, 10_000));
@@ -42,7 +49,11 @@ async function main(step = 1) {
 
   if (step <= 2.5) {
     const address = getAddress(ContractName.NftMarket, network.name);
-    await verifyContract(address, [20, deployer.address]);
+    await verifyContract(address, [
+      20,
+      deployer.address,
+      await nftFactory.getAddress(),
+    ]);
   }
 }
 

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./extentions/MarketPlatform.sol";
+import { IFactory } from "./NftFactory.sol";
 import { IRoyalty } from "@thirdweb-dev/contracts/extension/interface/IRoyalty.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -21,6 +22,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  * Support Royalty
  ***/
 contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
+  IFactory private immutable nftFactory;
   uint256 private platformFee;
   address private feeRecipient;
 
@@ -41,10 +43,15 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
   // prettier-ignore
   mapping(uint256 => mapping(uint256 => mapping(address => uint256))) private bidPrices;
 
-  constructor(uint256 _platformFee, address _feeRecipient) {
-    require(_platformFee <= 10000, "can't more than 10 percent");
+  constructor(
+    uint256 _platformFee,
+    address _feeRecipient,
+    IFactory _nftFactory
+  ) {
+    require(_platformFee <= 10_000, "can't more than 10 percent");
     platformFee = _platformFee;
     feeRecipient = _feeRecipient;
+    nftFactory = _nftFactory;
   }
 
   modifier isListedNFT(address _nft, uint256 _tokenId) {
@@ -150,9 +157,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     listedNft.sold = true;
 
     uint256 totalPrice = _price;
-    IRoyalty nft = IRoyalty(listedNft.nft);
-    (address royaltyRecipient, uint256 royaltyFee) = nft
-      .getDefaultRoyaltyInfo();
+    (address royaltyRecipient, uint256 royaltyFee) = getRoyalty(_nft);
 
     if (royaltyFee > 0) {
       uint256 royaltyTotal = calculateRoyalty(royaltyFee, _price);
@@ -269,26 +274,23 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     uint256 offerPrice = offer.offerPrice;
     uint256 totalPrice = offerPrice;
 
-    IRoyalty nft = IRoyalty(offer.nft);
-    (address royaltyRecipient, uint256 royaltyFee) = nft
-      .getDefaultRoyaltyInfo();
+    if (nftFactory.isMakeByFactory(_nft)) {
+      (address royaltyRecipient, uint256 royaltyFee) = IRoyalty(_nft)
+        .getDefaultRoyaltyInfo();
 
-    IERC20 payToken = IERC20(offer.payToken);
-
-    if (royaltyFee > 0) {
-      uint256 royaltyTotal = calculateRoyalty(royaltyFee, offerPrice);
-
-      // Transfer royalty fee to collection owner
-      payToken.transfer(royaltyRecipient, royaltyTotal);
-      totalPrice -= royaltyTotal;
+      if (royaltyFee > 0) {
+        uint256 royaltyTotal = calculateRoyalty(royaltyFee, offerPrice);
+        IERC20(offer.payToken).transfer(royaltyRecipient, royaltyTotal);
+        totalPrice -= royaltyTotal;
+      }
     }
 
     // Calculate & Transfer platfrom fee
     uint256 platformFeeTotal = calculatePlatformFee(offerPrice);
-    payToken.transfer(feeRecipient, platformFeeTotal);
+    IERC20(offer.payToken).transfer(feeRecipient, platformFeeTotal);
 
     // Transfer to seller
-    payToken.transfer(list.seller, totalPrice - platformFeeTotal);
+    IERC20(offer.payToken).transfer(list.seller, totalPrice - platformFeeTotal);
 
     // Transfer NFT to offerer
     IERC721(list.nft).safeTransferFrom(
@@ -426,9 +428,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     auction.success = true;
     auction.winner = auction.creator;
 
-    IRoyalty kuiperNft = IRoyalty(_nft);
-    (address royaltyRecipient, uint256 royaltyFee) = kuiperNft
-      .getDefaultRoyaltyInfo();
+    (address royaltyRecipient, uint256 royaltyFee) = getRoyalty(_nft);
 
     uint256 heighestBid = auction.heighestBid;
     uint256 totalPrice = heighestBid;
@@ -504,5 +504,16 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
   function changeFeeRecipient(address _feeRecipient) external onlyOwner {
     require(_feeRecipient != address(0), "can't be 0 address");
     feeRecipient = _feeRecipient;
+  }
+
+  function getRoyalty(address _nft) internal view returns (address, uint256) {
+    address royaltyRecipient = address(0);
+    uint256 royaltyFee = 0;
+
+    if (nftFactory.isMakeByFactory(_nft)) {
+      (royaltyRecipient, royaltyFee) = IRoyalty(_nft).getDefaultRoyaltyInfo();
+    }
+
+    return (royaltyRecipient, royaltyFee);
   }
 }
