@@ -4,7 +4,6 @@ import { MaxUint256, Signer, parseEther } from "ethers";
 import { ethers } from "hardhat";
 import { before } from "mocha";
 import {
-  IERC20,
   NFTCollection,
   NFTCollection__factory,
   NftFactory,
@@ -395,6 +394,8 @@ describe("Yushaku Marketplace", () => {
     });
 
     it("Marketplace owner should call result auction", async () => {
+      await time.increase(endTime);
+
       expect(
         await marketplace.connect(owner).resultAuction(nftAddress, tokenId),
       )

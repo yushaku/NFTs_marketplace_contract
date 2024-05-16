@@ -462,7 +462,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
 
     AuctionNFT storage auction = auctionNfts[_nft][_tokenId];
     IERC20 payToken = IERC20(auction.payToken);
-    payToken.transferFrom(msg.sender, address(this), _bidPrice);
+    require(payToken.transferFrom(msg.sender, address(this), _bidPrice));
 
     if (auction.lastBidder != address(0)) {
       address lastBidder = auction.lastBidder;

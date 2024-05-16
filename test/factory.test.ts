@@ -6,7 +6,6 @@ import {
   NFTCollection__factory,
   NftFactory__factory,
 } from "../typechain";
-import { Bytecode } from "hardhat/internal/hardhat-network/stack-traces/model";
 
 describe("Token contract", function () {
   async function deployTokenFixture() {

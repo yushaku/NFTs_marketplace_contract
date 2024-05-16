@@ -22,6 +22,16 @@ npx hardhat run scripts/deploy.ts
 - 🔥 Bid place to auction.
 - 🏰 (Marketplace owner) Support set and update payable token, platform fee.
 
+- user 1 **list** nft --> user 2 buy nft
 
-ipfs://bafybeicobaxdgv3zfirzxr5sj7ynkpyex76q75ccjorm4fit6stuo64ype
-https://api.pudgypenguins.io/lil/
+- user 1 **list** nft
+  --=---------------> user 2 offer
+  --=---------------> user 3 offer
+  --=---------------> user 4 offer
+  ======================================> user 1 accept offer
+
+- user 1 create **auction**
+  ----------------------> user 2 bid
+  ----------------------> user 3 bid
+  ----------------------> user 4 bid
+  ===================================> user 1 pick a highest bid
