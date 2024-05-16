@@ -112,10 +112,13 @@ interface IMarketPlatform {
   function cancelListedNFT(address _nft, uint256 _tokenId) external;
 
   //prettier-ignore
-  function buyNFT(address _nft, uint256 _tokenId, address _payToken, uint256 _price) external;
+  function buyNFT(address _nft, uint256 _tokenId, address _payToken) external;
 
   //prettier-ignore
-  function offerNFT(address _nft, uint256 _tokenId, address _payToken, uint256 _offerPrice) external;
+  function buyNFT(address _nft, uint256 _tokenId) payable external;
+
+  //prettier-ignore
+  function offerNFT(address _nft, uint256 _tokenId, address _payToken, uint256 _offerPrice) payable external;
 
   function cancelOfferNFT(address _nft, uint256 _tokenId) external;
 

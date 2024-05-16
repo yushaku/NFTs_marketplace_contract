@@ -1,11 +1,12 @@
 import { expect } from "chai";
-import { Signer, parseEther } from "ethers";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { MaxUint256, Signer, parseEther } from "ethers";
 import { ethers } from "hardhat";
 import { before } from "mocha";
 import {
   IERC20,
-  NFTCollectible__factory,
   NFTCollection,
+  NFTCollection__factory,
   NftFactory,
   NftFactory__factory,
   USDT,
@@ -27,12 +28,15 @@ describe("Yushaku Marketplace", () => {
   let buyer: Signer;
   let offerer: Signer;
   let bidder: Signer;
-  let payableToken: IERC20;
+  let payableToken: USDT;
 
   let marketplaceAddress: string;
   let nftAddress: string;
   let nftFactoryAddress: string;
   let uAddress: string;
+  let buyerAddress: string;
+  let creatorAddress: string;
+  let offererAddress: string;
 
   before(async () => {
     [owner, creator, buyer, offerer, bidder] = await ethers.getSigners();
@@ -50,7 +54,7 @@ describe("Yushaku Marketplace", () => {
     );
     marketplaceAddress = await marketplace.getAddress();
 
-    const payableToken = (await new USDT__factory(owner).deploy()) as USDT;
+    payableToken = (await new USDT__factory(owner).deploy()) as USDT;
     uAddress = await payableToken.getAddress();
     payableToken
       .connect(owner)
@@ -64,8 +68,9 @@ describe("Yushaku Marketplace", () => {
     ).to.true;
 
     // Transfer payable token to tester
-    const buyerAddress = await buyer.getAddress();
-    const offererAddress = await offerer.getAddress();
+    creatorAddress = await creator.getAddress();
+    buyerAddress = await buyer.getAddress();
+    offererAddress = await offerer.getAddress();
     await payableToken.connect(owner).transfer(buyerAddress, toWei(1000000));
     expect(await payableToken.balanceOf(buyerAddress)).to.eq(toWei(1000000));
 
@@ -79,39 +84,40 @@ describe("Yushaku Marketplace", () => {
     const list = await factory.list(creator);
 
     const collectionAddress = list[0];
-    nft = new NFTCollectible__factory(owner).attach(
+    nft = new NFTCollection__factory(owner).attach(
       collectionAddress,
     ) as NFTCollection;
     nftAddress = await nft.getAddress();
     expect(nftAddress).not.eq(null, "Create collection is failed.");
   });
 
-  describe("List and Buy", () => {
+  describe("--- LIST AND BUY WITH YSK TOKEN ---", () => {
     const tokenId = 0;
 
     it("Creator should mint NFT", async () => {
       const to = await creator.getAddress();
       const uri = "Yushaku.io";
       await nft.connect(creator).mintTo(to, uri);
-      console.log(await nft.ownerOf(tokenId));
 
-      expect(await nft.ownerOf(tokenId)).to.eq(to, "Mint NFT is failed.");
+      expect(await nft.ownerOf(tokenId)).to.eq(to);
     });
 
     it("Creator should list NFT on the marketplace", async () => {
       await nft.connect(creator).approve(marketplaceAddress, tokenId);
 
-      const tx = await marketplace
-        .connect(creator)
-        .listNft(nftAddress, tokenId, uAddress, toWei(100000));
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "ListedNFT",
-      ) as any;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      expect(eventNFT).eq(nftAddress, "NFT is wrong.");
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+      expect(
+        marketplace
+          .connect(creator)
+          .listNft(nftAddress, tokenId, uAddress, toWei(100000)),
+      )
+        .to.emit(marketplace, "ListedNFT")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(100000),
+          await creator.getAddress(),
+        ]);
     });
 
     it("Creator should cancel listed item", async () => {
@@ -125,151 +131,175 @@ describe("Yushaku Marketplace", () => {
     it("Creator should list NFT on the marketplace again!", async () => {
       await nft.connect(creator).approve(marketplaceAddress, tokenId);
 
-      const tx = await marketplace
-        .connect(creator)
-        .listNft(nftAddress, tokenId, uAddress, toWei(100000));
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "ListedNFT",
-      ) as any;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      expect(eventNFT).eq(nftAddress, "NFT is wrong.");
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+      expect(
+        marketplace
+          .connect(creator)
+          .listNft(nftAddress, tokenId, uAddress, toWei(100000)),
+      )
+        .to.emit(marketplace, "ListedNFT")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(100000),
+          creatorAddress,
+        ]);
     });
 
     it("Buyer should buy listed NFT", async () => {
-      const tokenId = 0;
-      const buyPrice = 100001;
-      await payableToken
-        .connect(buyer)
-        .approve(marketplaceAddress, toWei(buyPrice));
-      await marketplace
-        .connect(buyer)
-        .buyNFT(nftAddress, tokenId, uAddress, toWei(buyPrice));
-      expect(await nft.ownerOf(tokenId)).eq(
-        await buyer.getAddress(),
-        "Buy NFT is failed.",
-      );
+      await payableToken.connect(buyer).approve(marketplaceAddress, MaxUint256);
+      expect(
+        await marketplace
+          .connect(buyer)
+          ["buyNFT(address,uint256,address)"](nftAddress, tokenId, uAddress),
+      )
+        .to.emit(marketplace, "BoughtNFT")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(100000),
+          creatorAddress,
+          buyerAddress,
+        ]);
+
+      expect(await nft.ownerOf(tokenId)).eq(buyerAddress);
     });
   });
 
-  describe("List, Offer, and Accept Offer", () => {
+  describe("LIST, OFFER, AND ACCEPT OFFER WITH YSK TOKEN", () => {
+    const offerPrice = 1000;
     const tokenId = 1;
+
     it("Creator should mint NFT", async () => {
-      const to = await creator.getAddress();
       const uri = "Yushaku.io";
-      await nft.connect(creator).mintTo(to, uri);
-      expect(await nft.ownerOf(tokenId)).to.eq(to, "Mint NFT is failed.");
+      await nft.connect(creator).mintTo(creatorAddress, uri);
+      expect(await nft.ownerOf(tokenId)).to.eq(creatorAddress);
     });
 
     it("Creator should list NFT on the marketplace", async () => {
       await nft.connect(creator).approve(marketplaceAddress, tokenId);
 
-      const tx = await marketplace
-        .connect(creator)
-        .listNft(nftAddress, tokenId, uAddress, toWei(100000));
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "ListedNFT",
-      ) as any;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      expect(eventNFT).eq(nftAddress, "NFT is wrong.");
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+      expect(
+        marketplace
+          .connect(creator)
+          .listNft(nftAddress, tokenId, uAddress, toWei(100000)),
+      )
+        .to.emit(marketplace, "ListedNFT")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(100000),
+          creatorAddress,
+        ]);
     });
 
     it("Buyer should offer NFT", async () => {
-      const offerPrice = 1000;
-      await payableToken
-        .connect(buyer)
-        .approve(marketplaceAddress, toWei(offerPrice));
-      const tx = await marketplace
-        .connect(buyer)
-        .offerNFT(nftAddress, tokenId, uAddress, toWei(offerPrice));
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "OfferredNFT",
-      ) as any;
-      const eventOfferer = events[0].args.offerer;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      expect(eventOfferer).eq(
-        await buyer.getAddress(),
-        "Offerer address is wrong.",
-      );
-      expect(eventNFT).eq(nftAddress, "NFT address is wrong.");
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+      await payableToken.connect(buyer).approve(marketplaceAddress, MaxUint256);
+
+      expect(
+        await marketplace
+          .connect(buyer)
+          .offerNFT(nftAddress, tokenId, uAddress, toWei(offerPrice)),
+      )
+        .to.emit(marketplace, "OfferredNFT")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(offerPrice),
+          buyerAddress,
+        ]);
     });
 
     it("Buyer should cancel offer", async () => {
-      const tx = await marketplace
-        .connect(buyer)
-        .cancelOfferNFT(nftAddress, tokenId);
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "CanceledOfferredNFT",
-      ) as any;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      const eventOfferer = events[0].args.offerer;
-      expect(eventOfferer).eq(
-        await buyer.getAddress(),
-        "Offerer address is wrong.",
-      );
-      expect(eventNFT).eq(nftAddress, "NFT address is wrong.");
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+      expect(
+        await marketplace.connect(buyer).cancelOfferNFT(nftAddress, tokenId),
+      )
+        .to.emit(marketplace, "CanceledOfferredNFT")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(offerPrice),
+          creatorAddress,
+        ]);
+
+      expect(await nft.ownerOf(tokenId)).to.eq(marketplaceAddress);
     });
 
     it("Offerer should offer NFT", async () => {
-      const offerPrice = 1000;
       await payableToken
         .connect(offerer)
-        .approve(marketplaceAddress, toWei(offerPrice));
-      const tx = await marketplace
-        .connect(offerer)
-        .offerNFT(nftAddress, tokenId, uAddress, toWei(offerPrice));
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "OfferredNFT",
-      ) as any;
-      const eventOfferer = events[0].args.offerer;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      expect(eventOfferer).eq(
-        await offerer.getAddress(),
-        "Offerer address is wrong.",
-      );
-      expect(eventNFT).eq(nftAddress, "NFT address is wrong.");
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+        .approve(marketplaceAddress, MaxUint256);
+
+      expect(
+        await marketplace
+          .connect(offerer)
+          .offerNFT(nftAddress, tokenId, uAddress, toWei(offerPrice)),
+      )
+        .to.emit(marketplace, "OfferredNFT")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(offerPrice),
+          offererAddress,
+        ]);
     });
 
     it("Creator should accept offer", async () => {
-      await marketplace
-        .connect(creator)
-        .acceptOfferNFT(nftAddress, tokenId, await offerer.getAddress());
-      expect(await nft.ownerOf(tokenId)).eq(await offerer.getAddress());
+      expect(
+        await marketplace
+          .connect(creator)
+          .acceptOfferNFT(nftAddress, tokenId, offererAddress),
+      )
+        .to.emit(marketplace, "AcceptedNFT")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(offerPrice),
+          offererAddress,
+          creatorAddress,
+        ]);
+
+      expect(await nft.ownerOf(tokenId)).eq(offererAddress);
     });
   });
 
-  describe("Create Auction, bid place, and Result auction", async () => {
+  describe("CREATE AUCTION, BID PLACE, AND RESULT AUCTION", async () => {
     const tokenId = 2;
+    const price = 10000;
+    const minBid = 500;
+    const day = 24 * 60 * 60;
+    const startTime = Date.now(); // a day
+    const endTime = Date.now() + 60 * 60 * 24 * 7; // 7 days
+
     it("Creator should mint NFT", async () => {
-      const to = await creator.getAddress();
       const uri = "Yushaku.io";
-      await nft.connect(creator).mintTo(to, uri);
-      expect(await nft.ownerOf(tokenId)).to.eq(to, "Mint NFT is failed.");
+      await nft.connect(creator).mintTo(creatorAddress, uri);
+      expect(await nft.ownerOf(tokenId)).to.eq(creatorAddress);
     });
 
     it("Creator should create auction", async () => {
-      const price = 10000;
-      const minBid = 500;
-      const startTime = Date.now() + 60 * 60 * 24; // a day
-      const endTime = Date.now() + 60 * 60 * 24 * 7; // 7 days
       await nft.connect(creator).approve(marketplaceAddress, tokenId);
-      const tx = await marketplace
-        .connect(creator)
-        .createAuction(
+      expect(
+        await marketplace
+          .connect(creator)
+          .createAuction(
+            nftAddress,
+            tokenId,
+            uAddress,
+            toWei(price),
+            toWei(minBid),
+            BigInt(startTime),
+            BigInt(endTime),
+          ),
+      )
+        .to.emit(marketplace, "CreatedAuction")
+        .withArgs([
           nftAddress,
           tokenId,
           uAddress,
@@ -277,39 +307,37 @@ describe("Yushaku Marketplace", () => {
           toWei(minBid),
           BigInt(startTime),
           BigInt(endTime),
-        );
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "CreatedAuction",
-      ) as any;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      const eventCreator = events[0].args.creator;
-      expect(eventNFT).eq(nftAddress, "NFT address is wrong.");
-      expect(eventCreator).eq(
-        await creator.getAddress(),
-        "Creator address is wrong.",
-      );
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+          creatorAddress,
+        ]);
+
+      expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
     });
 
     it("Creator should cancel auction", async () => {
+      expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
       await marketplace.connect(creator).cancelAuction(nftAddress, tokenId);
-      expect(await nft.ownerOf(tokenId)).eq(
-        await creator.getAddress(),
-        "Cancel is failed.",
-      );
+      expect(await nft.ownerOf(tokenId)).eq(creatorAddress);
     });
 
     it("Creator should create auction again", async () => {
-      const price = 10000;
-      const minBid = 500;
-      const startTime = 0; // now
-      const endTime = Date.now() + 60 * 60 * 24 * 7; // 7 days
+      const startTime = Date.now() - 100000; // a day
+
       await nft.connect(creator).approve(marketplaceAddress, tokenId);
-      const tx = await marketplace
-        .connect(creator)
-        .createAuction(
+      expect(
+        await marketplace
+          .connect(creator)
+          .createAuction(
+            nftAddress,
+            tokenId,
+            uAddress,
+            toWei(price),
+            toWei(minBid),
+            BigInt(1714081570),
+            BigInt(endTime),
+          ),
+      )
+        .to.emit(marketplace, "CreatedAuction")
+        .withArgs([
           nftAddress,
           tokenId,
           uAddress,
@@ -317,96 +345,61 @@ describe("Yushaku Marketplace", () => {
           toWei(minBid),
           BigInt(startTime),
           BigInt(endTime),
-        );
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "CreatedAuction",
-      ) as any;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      const eventCreator = events[0].args.creator;
-      expect(eventNFT).eq(nftAddress, "NFT address is wrong.");
-      expect(eventCreator).eq(
-        await creator.getAddress(),
-        "Creator address is wrong.",
-      );
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+          creatorAddress,
+        ]);
+
+      console.log(BigInt(startTime));
+      expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
     });
 
     it("Buyer should bid place", async () => {
+      await time.increase(360_000);
+      await ethers.provider.send("evm_increaseTime", [360_000]);
       const bidPrice = 10500;
-      await payableToken
-        .connect(buyer)
-        .approve(marketplaceAddress, toWei(bidPrice));
-      const tx = await marketplace
-        .connect(buyer)
-        .bidPlace(nftAddress, tokenId, toWei(bidPrice));
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "PlacedBid",
-      ) as any;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      const eventBidder = events[0].args.bidder;
-      expect(eventNFT).eq(nftAddress, "NFT address is wrong.");
-      expect(eventBidder).eq(
-        await buyer.getAddress(),
-        "Bidder address is wrong.",
-      );
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+      await payableToken.connect(buyer).approve(marketplaceAddress, MaxUint256);
+      expect(
+        await marketplace
+          .connect(buyer)
+          .bidPlace(nftAddress, tokenId, toWei(bidPrice)),
+      )
+        .to.emit(marketplace, "PlacedBid")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(bidPrice),
+          buyerAddress,
+        ]);
     });
 
     it("Offerer should bid place", async () => {
+      await time.increase(360_000);
       const bidPrice = 11000;
       await payableToken
         .connect(offerer)
-        .approve(marketplaceAddress, toWei(bidPrice));
-      const tx = await marketplace
-        .connect(offerer)
-        .bidPlace(nftAddress, tokenId, toWei(bidPrice));
-      const receipt = await tx.wait();
-      const events = receipt?.logs?.filter(
-        (e: any) => e.event == "PlacedBid",
-      ) as any;
-      const eventNFT = events[0].args.nft;
-      const eventTokenId = events[0].args.tokenId;
-      const eventBidder = events[0].args.bidder;
-      expect(eventNFT).eq(nftAddress, "NFT address is wrong.");
-      expect(eventBidder).eq(
-        await offerer.getAddress(),
-        "Bidder address is wrong.",
-      );
-      expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
+        .approve(marketplaceAddress, MaxUint256);
+
+      expect(
+        await marketplace
+          .connect(buyer)
+          .bidPlace(nftAddress, tokenId, toWei(bidPrice)),
+      )
+        .to.emit(marketplace, "PlacedBid")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          uAddress,
+          toWei(bidPrice),
+          offererAddress,
+        ]);
     });
 
     it("Marketplace owner should call result auction", async () => {
-      try {
-        const tx = await marketplace
-          .connect(owner)
-          .resultAuction(nftAddress, tokenId);
-        const receipt = await tx.wait();
-        const events = receipt?.logs?.filter(
-          (e: any) => e.event == "ResultedAuction",
-        ) as any;
-        const eventNFT = events[0].args.nft;
-        const eventTokenId = events[0].args.tokenId;
-        const eventWinner = events[0].args.winner;
-        const eventCaller = events[0].args.caller;
-        expect(eventNFT).eq(nftAddress, "NFT address is wrong.");
-        expect(eventTokenId).eq(tokenId, "TokenId is wrong.");
-        expect(eventWinner).eq(
-          await offerer.getAddress(),
-          "Winner address is wrong.",
-        );
-        expect(eventCaller).eq(
-          await owner.getAddress(),
-          "Caller address is wrong.",
-        );
-        expect(await nft.ownerOf(tokenId)).eq(
-          eventWinner,
-          "NFT owner is wrong.",
-        );
-      } catch (error) {}
+      expect(
+        await marketplace.connect(owner).resultAuction(nftAddress, tokenId),
+      )
+        .to.emit(marketplace, "ResultedAuction")
+        .withArgs([nftAddress, tokenId, creatorAddress]);
     });
   });
 });

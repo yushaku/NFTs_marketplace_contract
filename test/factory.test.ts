@@ -6,6 +6,7 @@ import {
   NFTCollection__factory,
   NftFactory__factory,
 } from "../typechain";
+import { Bytecode } from "hardhat/internal/hardhat-network/stack-traces/model";
 
 describe("Token contract", function () {
   async function deployTokenFixture() {
@@ -21,8 +22,6 @@ describe("Token contract", function () {
 
       const userAddress = await addr1.getAddress();
       const list = await nftFactory.list(userAddress);
-      console.log(list);
-
       expect(list.length).to.equal(1);
 
       const nft = new NFTCollection__factory(addr1).attach(
@@ -41,20 +40,31 @@ describe("Token contract", function () {
       expect(await nft.ownerOf(0)).to.equal(userAddress);
 
       let total = await nft.totalSupply();
-      console.log({ total });
       expect(total).to.equal(1n);
+    });
 
-      // await nft.batchMintTo(
-      //   userAddress,
-      //   10,
-      //   "ipfs://bafybeigjo7vswkssnmoii6e5rif6srbc7xyqmdvxxlyo37zokst4dnmlka",
-      //   "",
-      // );
-      //
-      // total = await nft.totalSupply();
-      // console.log(total);
-      //
-      // expect(total).to.equal(11n);
+    it("Should nft mint batch", async function () {
+      const { nftFactory, addr1 } = await loadFixture(deployTokenFixture);
+      await nftFactory.connect(addr1).create("DOG", "DOG", 3);
+      const userAddress = await addr1.getAddress();
+      const list = await nftFactory.list(userAddress);
+      expect(list.length).to.equal(1);
+      const nft = new NFTCollection__factory(addr1).attach(
+        list[0],
+      ) as NFTCollection;
+
+      await nft.batchMintTo(
+        userAddress,
+        10,
+        "ipfs://bafybeigjo7vswkssnmoii6e5rif6srbc7xyqmdvxxlyo37zokst4dnmlka/",
+        "0x0000000000000000000000000000000000000000000000000000000000000000",
+      );
+
+      expect(await nft.balanceOf(userAddress)).to.equal(10);
+      expect(await nft.ownerOf(0)).to.equal(userAddress);
+
+      let total = await nft.totalSupply();
+      expect(total).to.equal(10);
     });
   });
 });

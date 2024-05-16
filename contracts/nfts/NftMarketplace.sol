@@ -27,6 +27,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
   address private feeRecipient;
 
   address[] private tokens;
+  address constant nativeToken = address(0);
   mapping(address => bool) private payableToken;
 
   // nft => tokenId => list struct
@@ -35,6 +36,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
   // nft => tokenId => offerer address => offer struct
   // prettier-ignore
   mapping(address => mapping(uint256 => mapping(address => OfferNFT))) private offerNfts;
+  mapping(address => mapping(uint256 => address[])) private offererAddress;
 
   // nft => tokenId => acuton struct
   mapping(address => mapping(uint256 => AuctionNFT)) private auctionNfts;
@@ -99,7 +101,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
 
   modifier isPayableToken(address _payToken) {
     require(
-      _payToken != address(0) && payableToken[_payToken],
+      _payToken == nativeToken || payableToken[_payToken],
       "invalid pay token"
     );
     _;
@@ -139,31 +141,25 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     delete listNfts[_nft][_tokenId];
   }
 
-  // @notice Buy listed NFT
   function buyNFT(
     address _nft,
     uint256 _tokenId,
-    address _payToken,
-    uint256 _price
+    address _payToken
   ) external isListedNFT(_nft, _tokenId) {
     ListNFT storage listedNft = listNfts[_nft][_tokenId];
-    require(
-      _payToken != address(0) && _payToken == listedNft.payToken,
-      "invalid pay token"
-    );
-    require(!listedNft.sold, "nft already sold");
-    require(_price >= listedNft.price, "invalid price");
+    require(!listedNft.sold, "NFT already sold");
+    require(_payToken == listedNft.payToken, "Not same pay token");
 
     listedNft.sold = true;
 
-    uint256 totalPrice = _price;
+    uint256 totalPrice = listedNft.price;
     (address royaltyRecipient, uint256 royaltyFee) = getRoyalty(_nft);
 
     if (royaltyFee > 0) {
-      uint256 royaltyTotal = calculateRoyalty(royaltyFee, _price);
+      uint256 royaltyTotal = calculateRoyalty(royaltyFee, listedNft.price);
 
       // Transfer royalty fee to collection owner
-      IERC20(listedNft.payToken).transferFrom(
+      IERC20(_payToken).transferFrom(
         msg.sender,
         royaltyRecipient,
         royaltyTotal
@@ -172,15 +168,11 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     }
 
     // Calculate & Transfer platfrom fee
-    uint256 platformFeeTotal = calculatePlatformFee(_price);
-    IERC20(listedNft.payToken).transferFrom(
-      msg.sender,
-      feeRecipient,
-      platformFeeTotal
-    );
+    uint256 platformFeeTotal = calculatePlatformFee(listedNft.price);
+    IERC20(_payToken).transferFrom(msg.sender, feeRecipient, platformFeeTotal);
 
     // Transfer to nft owner
-    IERC20(listedNft.payToken).transferFrom(
+    IERC20(_payToken).transferFrom(
       msg.sender,
       listedNft.seller,
       totalPrice - platformFeeTotal
@@ -197,7 +189,54 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
       listedNft.nft,
       listedNft.tokenId,
       listedNft.payToken,
-      _price,
+      listedNft.price,
+      listedNft.seller,
+      msg.sender
+    );
+  }
+
+  function buyNFT(
+    address _nft,
+    uint256 _tokenId
+  ) external payable isListedNFT(_nft, _tokenId) {
+    ListNFT storage listedNft = listNfts[_nft][_tokenId];
+    require(!listedNft.sold, "NFT already sold");
+    require(msg.value >= listedNft.price, "Insufficient payment");
+    listedNft.sold = true;
+
+    uint256 totalPrice = listedNft.price;
+    (address royaltyRecipient, uint256 royaltyFee) = getRoyalty(_nft);
+
+    if (royaltyFee > 0) {
+      uint256 royaltyTotal = calculateRoyalty(royaltyFee, listedNft.price);
+
+      // Transfer royalty fee to collection owner
+      (bool sentRoyaty, ) = royaltyRecipient.call{ value: royaltyTotal }("");
+      require(sentRoyaty, "Failed to send Ether");
+      totalPrice -= royaltyTotal;
+    }
+
+    // Calculate & Transfer platfrom fee
+    uint256 platformFeeTotal = calculatePlatformFee(listedNft.price);
+
+    // Transfer to nft owner
+    (bool sentSeller, ) = listedNft.seller.call{
+      value: totalPrice - platformFeeTotal
+    }("");
+    require(sentSeller, "Failed to send Ether");
+
+    // Transfer NFT to buyer
+    IERC721(listedNft.nft).safeTransferFrom(
+      address(this),
+      msg.sender,
+      listedNft.tokenId
+    );
+
+    emit BoughtNFT(
+      listedNft.nft,
+      listedNft.tokenId,
+      listedNft.payToken,
+      listedNft.price,
       listedNft.seller,
       msg.sender
     );
@@ -209,12 +248,17 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     uint256 _tokenId,
     address _payToken,
     uint256 _offerPrice
-  ) external isListedNFT(_nft, _tokenId) {
+  ) external payable isListedNFT(_nft, _tokenId) {
     require(_offerPrice > 0, "price can not 0");
 
     ListNFT memory nft = listNfts[_nft][_tokenId];
-    IERC20(nft.payToken).transferFrom(msg.sender, address(this), _offerPrice);
+    if (nft.payToken == nativeToken) {
+      require(msg.value >= _offerPrice, "Insufficient payment");
+    } else {
+      IERC20(nft.payToken).transferFrom(msg.sender, address(this), _offerPrice);
+    }
 
+    offererAddress[_nft][_tokenId].push(msg.sender);
     offerNfts[_nft][_tokenId][msg.sender] = OfferNFT({
       nft: nft.nft,
       tokenId: nft.tokenId,
@@ -241,8 +285,22 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     OfferNFT memory offer = offerNfts[_nft][_tokenId][msg.sender];
     require(offer.offerer == msg.sender, "not offerer");
     require(!offer.accepted, "offer already accepted");
+
     delete offerNfts[_nft][_tokenId][msg.sender];
-    IERC20(offer.payToken).transfer(offer.offerer, offer.offerPrice);
+    address[] memory offerer = offererAddress[_nft][_tokenId];
+    for (uint256 i = 0; i < offerer.length; i++) {
+      if (offerer[i] == msg.sender) {
+        delete offererAddress[_nft][_tokenId][i];
+      }
+    }
+
+    if (offer.payToken == nativeToken) {
+      (bool sent, ) = offer.offerer.call{ value: offer.offerPrice }("");
+      require(sent, "Failed to send Ether");
+    } else {
+      IERC20(offer.payToken).transfer(offer.offerer, offer.offerPrice);
+    }
+
     emit CanceledOfferredNFT(
       offer.nft,
       offer.tokenId,
@@ -263,6 +321,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     isListedNFT(_nft, _tokenId)
   {
     require(listNfts[_nft][_tokenId].seller == msg.sender, "not listed owner");
+
     OfferNFT storage offer = offerNfts[_nft][_tokenId][_offerer];
     ListNFT storage list = listNfts[offer.nft][offer.tokenId];
     require(!list.sold, "already sold");
@@ -280,17 +339,30 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
 
       if (royaltyFee > 0) {
         uint256 royaltyTotal = calculateRoyalty(royaltyFee, offerPrice);
-        IERC20(offer.payToken).transfer(royaltyRecipient, royaltyTotal);
+        if (offer.payToken == nativeToken) {
+          (bool sentSeller, ) = list.seller.call{ value: royaltyTotal }("");
+          require(sentSeller, "Failed to send Ether");
+        } else {
+          IERC20(offer.payToken).transfer(royaltyRecipient, royaltyTotal);
+        }
+
         totalPrice -= royaltyTotal;
       }
     }
 
-    // Calculate & Transfer platfrom fee
-    uint256 platformFeeTotal = calculatePlatformFee(offerPrice);
-    IERC20(offer.payToken).transfer(feeRecipient, platformFeeTotal);
+    uint256 sellerReceive = totalPrice - calculatePlatformFee(offerPrice);
+    if (offer.payToken == nativeToken) {
+      (bool sentSeller, ) = list.seller.call{ value: sellerReceive }("");
+      require(sentSeller, "Failed to send Ether");
+    } else {
+      IERC20(offer.payToken).transfer(list.seller, sellerReceive);
+    }
 
-    // Transfer to seller
-    IERC20(offer.payToken).transfer(list.seller, totalPrice - platformFeeTotal);
+    // for (address offerUser of offerNfts[_nft][_tokenId]) {
+    //     OfferNFT storage offer = offerNfts[_nft][_tokenId][offerUser];
+    //     (bool sent, ) = offerUser.call{ value: offer.price }("");
+    //     require(sent, "Failed to send token");
+    // }
 
     // Transfer NFT to offerer
     IERC721(list.nft).safeTransferFrom(
@@ -461,6 +533,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     );
   }
 
+  // ----------------- UTILS FUNCTIONS --------------
   function calculatePlatformFee(uint256 _price) public view returns (uint256) {
     return (_price * platformFee) / 10000;
   }
@@ -475,7 +548,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
   function getListedNFT(
     address _nft,
     uint256 _tokenId
-  ) public view returns (ListNFT memory) {
+  ) external view returns (ListNFT memory) {
     return listNfts[_nft][_tokenId];
   }
 
@@ -515,5 +588,21 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     }
 
     return (royaltyRecipient, royaltyFee);
+  }
+
+  function removeNftOffer(
+    address _nft,
+    uint256 _tokenId,
+    address _offerer
+  ) internal {
+    address[] memory offerer = offererAddress[_nft][_tokenId];
+    uint256 userIndex = 0;
+    for (uint256 i = 0; i < offerer.length; i++) {
+      if (offerer[i] == _offerer) {
+        userIndex = i;
+      }
+    }
+
+    delete offererAddress[_nft][_tokenId][userIndex];
   }
 }

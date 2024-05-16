@@ -19,6 +19,7 @@ async function main(step = 1) {
   let nftMarket: YuNftMarketplace;
 
   if (step <= 1) {
+    console.log("deploying factory");
     nftFactory = await new NftFactory__factory(deployer).deploy();
     const address = await nftFactory.getAddress();
     writeDownAddress(ContractName.NftFactory, address, network.name);
@@ -28,6 +29,7 @@ async function main(step = 1) {
   }
 
   if (step <= 2) {
+    console.log("deploying marketplace");
     nftMarket = await new MPFactory(deployer).deploy(
       20,
       deployer.address,
@@ -38,6 +40,12 @@ async function main(step = 1) {
   } else {
     const address = getAddress(ContractName.NftMarket, network.name);
     nftMarket = new MPFactory().attach(address) as YuNftMarketplace;
+  }
+
+  if (step <= 3) {
+    console.log("adding ysk as payable token to marketplace");
+    const yskAddress = getAddress(ContractName.YuToken, network.name);
+    nftMarket.addPayableToken(yskAddress);
   }
 
   await new Promise((resolve) => setTimeout(resolve, 10_000));
