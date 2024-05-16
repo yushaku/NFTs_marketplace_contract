@@ -255,7 +255,13 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     if (nft.payToken == nativeToken) {
       require(msg.value >= _offerPrice, "Insufficient payment");
     } else {
-      IERC20(nft.payToken).transferFrom(msg.sender, address(this), _offerPrice);
+      require(
+        IERC20(nft.payToken).transferFrom(
+          msg.sender,
+          address(this),
+          _offerPrice
+        )
+      );
     }
 
     offererAddress[_nft][_tokenId].push(msg.sender);
@@ -358,18 +364,20 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
       IERC20(offer.payToken).transfer(list.seller, sellerReceive);
     }
 
-    // for (address offerUser of offerNfts[_nft][_tokenId]) {
-    //     OfferNFT storage offer = offerNfts[_nft][_tokenId][offerUser];
-    //     (bool sent, ) = offerUser.call{ value: offer.price }("");
-    //     require(sent, "Failed to send token");
-    // }
-
-    // Transfer NFT to offerer
-    IERC721(list.nft).safeTransferFrom(
-      address(this),
-      offer.offerer,
-      list.tokenId
-    );
+    address[] memory offerers = offererAddress[_nft][_tokenId];
+    for (uint256 i = 0; i < offerers.length; i++) {
+      address offerUser = offerers[i];
+      if (offerUser == _offerer) {
+        IERC721(list.nft).safeTransferFrom(
+          address(this),
+          offer.offerer,
+          list.tokenId
+        );
+        continue;
+      }
+      OfferNFT memory missOffer = offerNfts[_nft][_tokenId][offerUser];
+      _sendToken(missOffer.payToken, missOffer.offerer, missOffer.offerPrice);
+    }
 
     emit AcceptedNFT(
       offer.nft,
@@ -588,6 +596,15 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     }
 
     return (royaltyRecipient, royaltyFee);
+  }
+
+  function _sendToken(address token, address to, uint256 amount) private {
+    if (token == nativeToken) {
+      (bool sent, ) = to.call{ value: amount }("");
+      require(sent, "Failed to send token");
+    } else {
+      require(IERC20(token).transfer(to, amount));
+    }
   }
 
   function removeNftOffer(

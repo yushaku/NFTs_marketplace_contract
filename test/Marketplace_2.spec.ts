@@ -145,7 +145,7 @@ describe("Yushaku Marketplace", () => {
     });
   });
 
-  describe("LIST, OFFER, AND ACCEPT OFFER WITH YSK TOKEN", () => {
+  describe("--- LIST, OFFER, AND ACCEPT OFFER WITH NATIVE TOKEN ---", () => {
     const offerPrice = toWei(10);
     const tokenId = 1;
 
