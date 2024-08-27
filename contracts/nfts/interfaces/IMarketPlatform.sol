@@ -137,7 +137,11 @@ interface IMarketPlatform {
 
   function cancelAuction(address _nft, uint256 _tokenId) external;
 
-  function bidPlace(address _nft, uint256 _tokenId, uint256 _bidPrice) external;
+  function bidPlace(
+    address _nft,
+    uint256 _tokenId,
+    uint256 _bidPrice
+  ) external payable;
 
   function resultAuction(address _nft, uint256 _tokenId) external;
 }

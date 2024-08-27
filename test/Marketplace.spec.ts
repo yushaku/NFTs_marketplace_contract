@@ -347,13 +347,13 @@ describe("Yushaku Marketplace", () => {
           creatorAddress,
         ]);
 
-      console.log(BigInt(startTime));
       expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
     });
 
     it("Buyer should bid place", async () => {
       await time.increase(360_000);
       await ethers.provider.send("evm_increaseTime", [360_000]);
+
       const bidPrice = 10500;
       await payableToken.connect(buyer).approve(marketplaceAddress, MaxUint256);
       expect(

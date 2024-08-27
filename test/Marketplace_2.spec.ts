@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { Provider, Signer, parseEther } from "ethers";
 import { ethers } from "hardhat";
 import { before } from "mocha";
@@ -221,131 +222,170 @@ describe("Yushaku Marketplace", () => {
     });
   });
 
-  // describe("CREATE AUCTION, BID PLACE, AND RESULT AUCTION", async () => {
-  //   const tokenId = 2;
-  //   const price = 10000;
-  //   const minBid = 500;
-  //   const day = 24 * 60 * 60;
-  //   const startTime = Date.now(); // a day
-  //   const endTime = Date.now() + 60 * 60 * 24 * 7; // 7 days
-  //
-  //   it("Creator should mint NFT", async () => {
-  //     const uri = "Yushaku.io";
-  //     await nft.connect(creator).mintTo(creatorAddress, uri);
-  //     expect(await nft.ownerOf(tokenId)).to.eq(creatorAddress);
-  //   });
-  //
-  //   it("Creator should create auction", async () => {
-  //     await nft.connect(creator).approve(marketplaceAddress, tokenId);
-  //     expect(
-  //       await marketplace
-  //         .connect(creator)
-  //         .createAuction(
-  //           nftAddress,
-  //           tokenId,
-  //           native,
-  //           toWei(price),
-  //           toWei(minBid),
-  //           BigInt(startTime),
-  //           BigInt(endTime),
-  //         ),
-  //     )
-  //       .to.emit(marketplace, "CreatedAuction")
-  //       .withArgs([
-  //         nftAddress,
-  //         tokenId,
-  //         native,
-  //         toWei(price),
-  //         toWei(minBid),
-  //         BigInt(startTime),
-  //         BigInt(endTime),
-  //         creatorAddress,
-  //       ]);
-  //
-  //     expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
-  //   });
-  //
-  //   it("Creator should cancel auction", async () => {
-  //     expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
-  //     await marketplace.connect(creator).cancelAuction(nftAddress, tokenId);
-  //     expect(await nft.ownerOf(tokenId)).eq(creatorAddress);
-  //   });
-  //
-  //   it("Creator should create auction again", async () => {
-  //     const startTime = Date.now() - 100000; // a day
-  //
-  //     await nft.connect(creator).approve(marketplaceAddress, tokenId);
-  //     expect(
-  //       await marketplace
-  //         .connect(creator)
-  //         .createAuction(
-  //           nftAddress,
-  //           tokenId,
-  //           native,
-  //           toWei(price),
-  //           toWei(minBid),
-  //           BigInt(1714081570),
-  //           BigInt(endTime),
-  //         ),
-  //     )
-  //       .to.emit(marketplace, "CreatedAuction")
-  //       .withArgs([
-  //         nftAddress,
-  //         tokenId,
-  //         native,
-  //         toWei(price),
-  //         toWei(minBid),
-  //         BigInt(startTime),
-  //         BigInt(endTime),
-  //         creatorAddress,
-  //       ]);
-  //
-  //     console.log(BigInt(startTime));
-  //     expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
-  //   });
-  //
-  //   it("Buyer should bid place", async () => {
-  //     await time.increase(360_000);
-  //     await ethers.provider.send("evm_increaseTime", [360_000]);
-  //     const bidPrice = 10500;
-  //     await payableToken.connect(buyer).approve(marketplaceAddress, MaxUint256);
-  //     expect(
-  //       await marketplace
-  //         .connect(buyer)
-  //         .bidPlace(nftAddress, tokenId, toWei(bidPrice)),
-  //     )
-  //       .to.emit(marketplace, "PlacedBid")
-  //       .withArgs([nftAddress, tokenId, native, toWei(bidPrice), buyerAddress]);
-  //   });
-  //
-  //   it("Offerer should bid place", async () => {
-  //     await time.increase(360_000);
-  //     const bidPrice = 11000;
-  //     await payableToken
-  //       .connect(offerer)
-  //       .approve(marketplaceAddress, MaxUint256);
-  //
-  //     expect(
-  //       await marketplace
-  //         .connect(buyer)
-  //         .bidPlace(nftAddress, tokenId, toWei(bidPrice)),
-  //     )
-  //       .to.emit(marketplace, "PlacedBid")
-  //       .withArgs([
-  //         nftAddress,
-  //         tokenId,
-  //         native,
-  //         toWei(bidPrice),
-  //         offererAddress,
-  //       ]);
-  //   });
-  //
-  //   it("Marketplace owner should call result auction", async () => {
-  //     expect(
-  //       await marketplace.connect(owner).resultAuction(nftAddress, tokenId),
-  //     )
-  //       .to.emit(marketplace, "ResultedAuction")
-  //       .withArgs([nftAddress, tokenId, creatorAddress]);
-  //   });
-  // });
+  describe("--- CREATE AUCTION, BID PLACE, AND RESULT AUCTION WITH NATIVE TOKEN ---", async () => {
+    const tokenId = 2;
+    const price = 50;
+    const minBid = 5;
+    let startTime = 0; // tomorrow
+    let endTime = 0; // 7 days
+
+    it("Creator should mint NFT", async () => {
+      const uri = "Yushaku.io";
+      await nft.connect(creator).mintTo(creatorAddress, uri);
+      expect(await nft.ownerOf(tokenId)).to.eq(creatorAddress);
+    });
+
+    it("Creator should create auction", async () => {
+      startTime = Date.now() + 60 * 60 * 1000 * 24 * 1; // tomorrow
+      endTime = Date.now() + 60 * 60 * 1000 * 24 * 7; // 7 days
+
+      console.log({
+        startTime: new Date(startTime).toUTCString(),
+      });
+
+      await nft.connect(creator).approve(marketplaceAddress, tokenId);
+      expect(
+        await marketplace
+          .connect(creator)
+          .createAuction(
+            nftAddress,
+            tokenId,
+            native,
+            toWei(price),
+            toWei(minBid),
+            BigInt(startTime),
+            BigInt(endTime),
+          ),
+      )
+        .to.emit(marketplace, "CreatedAuction")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          native,
+          toWei(price),
+          toWei(minBid),
+          BigInt(startTime),
+          BigInt(endTime),
+          creatorAddress,
+        ]);
+
+      expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
+    });
+
+    it("Creator should cancel auction", async () => {
+      console.log({
+        startTime: new Date(startTime).toUTCString(),
+        now: new Date().toUTCString(),
+      });
+
+      expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
+      await marketplace.connect(creator).cancelAuction(nftAddress, tokenId);
+      expect(await nft.ownerOf(tokenId)).eq(creatorAddress);
+    });
+
+    it("Creator should create auction again", async () => {
+      startTime = Date.now() + 60 * 60 * 24 * 1; // tomorrow
+      endTime = Date.now() + 60 * 60 * 24 * 7; // 7 days
+
+      await nft.connect(creator).approve(marketplaceAddress, tokenId);
+      expect(
+        await marketplace
+          .connect(creator)
+          .createAuction(
+            nftAddress,
+            tokenId,
+            native,
+            toWei(price),
+            toWei(minBid),
+            BigInt(1714081570),
+            BigInt(endTime),
+          ),
+      )
+        .to.emit(marketplace, "CreatedAuction")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          native,
+          toWei(price),
+          toWei(minBid),
+          BigInt(startTime),
+          BigInt(endTime),
+          creatorAddress,
+        ]);
+
+      expect(await nft.ownerOf(tokenId)).eq(marketplaceAddress);
+    });
+
+    it("Buyer should bid place", async () => {
+      await time.increase(360_000);
+      await ethers.provider.send("evm_increaseTime", [360_000]);
+      const bidPrice = 55;
+
+      expect(
+        await marketplace
+          .connect(buyer)
+          .bidPlace(nftAddress, tokenId, toWei(bidPrice), {
+            value: toWei(bidPrice),
+          }),
+      )
+        .to.emit(marketplace, "PlacedBid")
+        .withArgs([nftAddress, tokenId, native, toWei(bidPrice), buyerAddress]);
+    });
+
+    it("Offerer should bid place success when bid price is equal min bid price", async () => {
+      await time.increase(360_000);
+      const bidPrice = 60;
+
+      expect(
+        await marketplace
+          .connect(buyer)
+          .bidPlace(nftAddress, tokenId, toWei(bidPrice), {
+            value: toWei(bidPrice),
+          }),
+      )
+        .to.emit(marketplace, "PlacedBid")
+        .withArgs([
+          nftAddress,
+          tokenId,
+          native,
+          toWei(bidPrice),
+          offererAddress,
+        ]);
+    });
+
+    it("Offerer should bid failed because bid price is less then min bid price", async () => {
+      await time.increase(360_000);
+      const bidPrice = 61;
+
+      // expect(
+      //   await marketplace
+      //     .connect(buyer)
+      //     .bidPlace(nftAddress, tokenId, toWei(bidPrice), {
+      //       value: toWei(bidPrice),
+      //     }),
+      // ).to.be.reverted;
+
+      try {
+        await marketplace
+          .connect(buyer)
+          .bidPlace(nftAddress, tokenId, toWei(bidPrice), {
+            value: toWei(bidPrice),
+          });
+
+        expect.fail("Expected the transaction to revert");
+      } catch (error: any) {
+        expect(error.message).to.include("less than min bid price");
+      }
+    });
+
+    it("Marketplace owner should call result auction", async () => {
+      await time.increase(endTime);
+
+      expect(
+        await marketplace.connect(owner).resultAuction(nftAddress, tokenId),
+      )
+        .to.emit(marketplace, "ResultedAuction")
+        .withArgs([nftAddress, tokenId, creatorAddress]);
+    });
+  });
 });
