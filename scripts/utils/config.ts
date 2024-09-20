@@ -7,6 +7,7 @@ export const EPOCH_ZERO_START = Math.floor(Date.now() / 1000) + ONE_DAY_SECONDS;
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 export enum ContractName {
+  ShopPayment = "ShopPayment",
   YuToken = "YuToken",
   USDT = "USDT",
   YuGovernor = "YuGovernor",

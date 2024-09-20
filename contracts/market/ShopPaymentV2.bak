@@ -1,0 +1,43 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+// Import the previous version of the contract
+import "./ShopPayment.sol";
+
+/// @title ShopPaymentV2 - New Version with Discount Functionality
+contract ShopPaymentV2 is ShopPayment {
+  // New state variable for discount rate (e.g., 5%)
+  uint256 public discountRate; // Represented in basis points (e.g., 500 = 5%)
+
+  // Event for updating discount rate
+  event DiscountRateUpdated(uint256 newDiscountRate);
+
+  /// @notice Initialize the new variable (if needed)
+  function initializeV2(uint256 _discountRate) public reinitializer(2) {
+    discountRate = _discountRate;
+    emit DiscountRateUpdated(_discountRate);
+  }
+
+  /// @notice Set a new discount rate (onlyOwner)
+  /// @param _discountRate New discount rate in basis points
+  function setDiscountRate(uint256 _discountRate) external onlyOwner {
+    require(_discountRate <= 1000, "Discount rate cannot exceed 10%");
+    discountRate = _discountRate;
+    emit DiscountRateUpdated(_discountRate);
+  }
+
+  /// @notice Override the createAndPayOrder to apply discount
+  function createAndPayOrder(
+    string calldata _orderId,
+    uint256 _price
+  ) external payable override nonReentrant {
+    uint256 discountedPrice = _price - ((_price * discountRate) / 10000);
+    require(
+      msg.value == discountedPrice,
+      "Incorrect payment amount after discount"
+    );
+
+    // Call the parent contract's createAndPayOrder with the discounted price
+    super.createAndPayOrder(_orderId, discountedPrice);
+  }
+}
