@@ -12,11 +12,11 @@ importers:
         specifier: ^1.4.7
         version: 1.4.7(bufferutil@4.0.7)(utf-8-validate@5.0.10)
       '@openzeppelin/contracts':
-        specifier: ^4.9.3
-        version: 4.9.6
+        specifier: 5.0.2
+        version: 5.0.2
       '@openzeppelin/contracts-upgradeable':
-        specifier: ^4.9.6
-        version: 4.9.6
+        specifier: 5.0.2
+        version: 5.0.2(@openzeppelin/contracts@5.0.2)
       '@openzeppelin/hardhat-upgrades':
         specifier: ^2.2.1
         version: 2.2.1(@nomicfoundation/hardhat-ethers@3.0.4(ethers@6.7.1(bufferutil@4.0.7)(utf-8-validate@5.0.10))(hardhat@2.17.2(bufferutil@4.0.7)(ts-node@10.9.1(@types/node@20.5.7)(typescript@5.2.2))(typescript@5.2.2)(utf-8-validate@5.0.10)))(@nomicfoundation/hardhat-verify@1.1.1(hardhat@2.17.2(bufferutil@4.0.7)(ts-node@10.9.1(@types/node@20.5.7)(typescript@5.2.2))(typescript@5.2.2)(utf-8-validate@5.0.10)))(bufferutil@4.0.7)(ethers@6.7.1(bufferutil@4.0.7)(utf-8-validate@5.0.10))(hardhat@2.17.2(bufferutil@4.0.7)(ts-node@10.9.1(@types/node@20.5.7)(typescript@5.2.2))(typescript@5.2.2)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
@@ -465,8 +465,16 @@ packages:
   '@openzeppelin/contracts-upgradeable@4.9.6':
     resolution: {integrity: sha512-m4iHazOsOCv1DgM7eD7GupTJ+NFVujRZt1wzddDPSVGpWdKq1SKkla5htKG7+IS4d2XOCtzkUNwRZ7Vq5aEUMA==}
 
+  '@openzeppelin/contracts-upgradeable@5.0.2':
+    resolution: {integrity: sha512-0MmkHSHiW2NRFiT9/r5Lu4eJq5UJ4/tzlOgYXNAIj/ONkQTVnz22pLxDvp4C4uZ9he7ZFvGn3Driptn1/iU7tQ==}
+    peerDependencies:
+      '@openzeppelin/contracts': 5.0.2
+
   '@openzeppelin/contracts@4.9.6':
     resolution: {integrity: sha512-xSmezSupL+y9VkHZJGDoCBpmnB2ogM13ccaYDWqJTfS3dbuHkgjuwDFUmaFauBCboQMGB/S5UqUl2y54X99BmA==}
+
+  '@openzeppelin/contracts@5.0.2':
+    resolution: {integrity: sha512-ytPc6eLGcHHnapAZ9S+5qsdomhjo6QBHTDRRBFfTxXIpsicMhVPouPgmUPebZZZGX7vt9USA+Z+0M0dSVtSUEA==}
 
   '@openzeppelin/defender-admin-client@1.48.0':
     resolution: {integrity: sha512-MN29JD6jA3PgOxF2tG0aZbMIwOCieYWkK9UbHCq1UzGPrMgGV9NVMUyVdqpv7Ynplwsjp5ZTBDOyttwvTlchHg==}
@@ -4233,7 +4241,13 @@ snapshots:
 
   '@openzeppelin/contracts-upgradeable@4.9.6': {}
 
+  '@openzeppelin/contracts-upgradeable@5.0.2(@openzeppelin/contracts@5.0.2)':
+    dependencies:
+      '@openzeppelin/contracts': 5.0.2
+
   '@openzeppelin/contracts@4.9.6': {}
+
+  '@openzeppelin/contracts@5.0.2': {}
 
   '@openzeppelin/defender-admin-client@1.48.0(bufferutil@4.0.7)(debug@4.3.4)(utf-8-validate@5.0.10)':
     dependencies:

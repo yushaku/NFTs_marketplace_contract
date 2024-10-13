@@ -8,7 +8,7 @@ import { IRoyalty } from "@thirdweb-dev/contracts/extension/interface/IRoyalty.s
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @author Yushaku
@@ -48,8 +48,9 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
   constructor(
     uint256 _platformFee,
     address _feeRecipient,
-    IFactory _nftFactory
-  ) {
+    IFactory _nftFactory,
+    address initialOwner
+  ) Ownable(initialOwner) {
     require(_platformFee <= 10_000, "can't more than 10 percent");
     platformFee = _platformFee;
     feeRecipient = _feeRecipient;
