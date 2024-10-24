@@ -10,9 +10,7 @@ const {
   ETHERSCAN_API_KEY = "",
   ARBITRUM_API_KEY = "",
   BNB_API_KEY = "",
-  ALCHEMY_API_SEPOLIA = "",
   POLYGON_SCAN = "",
-  ALCHEMY_API_MAINET = "",
   COIN_MARKETCAP_API_KEY = "",
   INFURA_KEY = "",
   REPORT_GAS = true,
@@ -33,17 +31,12 @@ const config: HardhatUserConfig = {
   },
   networks: {
     sepolia: {
-      url: ALCHEMY_API_SEPOLIA,
+      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       chainId: 11155111,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
-    goerli: {
-      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
-      chainId: 5,
-      accounts: [`0x${WALLET_PRIVATE_KEY}`],
-    },
     mainnet: {
-      url: ALCHEMY_API_MAINET,
+      url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
       chainId: 1,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
@@ -52,23 +45,18 @@ const config: HardhatUserConfig = {
       chainId: 42161,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
-    arbitrum_goerli: {
-      url: `https://arbitrum-goerli.infura.io/v3/${INFURA_KEY}`,
-      chainId: 421613,
-      accounts: [`0x${WALLET_PRIVATE_KEY}`],
-    },
     arbitrum_sepolia: {
       url: `https://arbitrum-sepolia.infura.io/v3/${INFURA_KEY}`,
       chainId: 421614,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
     bnb: {
-      url: "https://binance.llamarpc.com",
+      url: `https://bsc-mainnet.infura.io/v3/${INFURA_KEY}`,
       chainId: 56,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
     bnb_testnet: {
-      url: "https://bsc-testnet.publicnode.com",
+      url: `https://bsc-testnet.infura.io/v3/${INFURA_KEY}`,
       chainId: 97,
       accounts: [`0x${WALLET_PRIVATE_KEY}`],
     },
