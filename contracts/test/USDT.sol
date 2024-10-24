@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract USDT is ERC20, Ownable {
   uint constant _INITIAL_SUPPLY = 1_000_000 ether;
 
-  constructor() ERC20("Fake USDT", "USDT") Ownable() {
+  constructor() ERC20("Fake USDT", "USDT") Ownable(msg.sender) {
     _mint(msg.sender, _INITIAL_SUPPLY);
   }
 

@@ -8,7 +8,7 @@ import { IRoyalty } from "@thirdweb-dev/contracts/extension/interface/IRoyalty.s
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @author Yushaku
@@ -49,7 +49,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     uint256 _platformFee,
     address _feeRecipient,
     IFactory _nftFactory
-  ) {
+  ) Ownable(msg.sender) {
     require(_platformFee <= 10_000, "can't more than 10 percent");
     platformFee = _platformFee;
     feeRecipient = _feeRecipient;
@@ -257,17 +257,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
     require(_offerPrice > 0, "price can not 0");
 
     ListNFT memory nft = listNfts[_nft][_tokenId];
-    if (nft.payToken == nativeToken) {
-      require(msg.value >= _offerPrice, "Insufficient payment");
-    } else {
-      require(
-        IERC20(nft.payToken).transferFrom(
-          msg.sender,
-          address(this),
-          _offerPrice
-        )
-      );
-    }
+    _takeToken(nft.payToken, _offerPrice);
 
     offererAddress[_nft][_tokenId].push(msg.sender);
     offerNfts[_nft][_tokenId][msg.sender] = OfferNFT({
@@ -451,17 +441,7 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
       "less than min bid price"
     );
 
-    if (auction.payToken == nativeToken) {
-      require(msg.value >= _bidPrice, "Insufficient payment");
-    } else {
-      require(
-        IERC20(auction.payToken).transferFrom(
-          msg.sender,
-          address(this),
-          _bidPrice
-        )
-      );
-    }
+    _takeToken(auction.payToken, _bidPrice);
 
     if (auction.lastBidder != address(0)) {
       address lastBidder = auction.lastBidder;
@@ -552,11 +532,26 @@ contract YuNftMarketplace is IMarketPlatform, Ownable, ReentrancyGuard {
   }
 
   function _sendToken(address token, address to, uint256 amount) private {
-    if (token == nativeToken) {
-      (bool sent, ) = to.call{ value: amount }("");
-      require(sent, "Failed to send token");
-    } else {
-      require(IERC20(token).transfer(to, amount));
+    if (amount > 0) {
+      if (token == nativeToken) {
+        (bool sent, ) = to.call{ value: amount }("");
+        require(sent, "Failed to send token");
+      } else {
+        require(IERC20(token).transfer(to, amount), "Failed to send token");
+      }
+    }
+  }
+
+  function _takeToken(address token, uint256 amount) private {
+    if (amount > 0) {
+      if (token == nativeToken) {
+        require(msg.value >= amount, "Insufficient payment");
+      } else {
+        require(
+          IERC20(token).transferFrom(msg.sender, address(this), amount),
+          "Insufficient payment"
+        );
+      }
     }
   }
 
