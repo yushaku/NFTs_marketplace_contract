@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
@@ -26,12 +26,8 @@ struct Order {
   uint256 createdAt;
 }
 
-contract ShopPayment is
-  Initializable,
-  OwnableUpgradeable,
-  ReentrancyGuardUpgradeable,
-  UUPSUpgradeable
-{
+// prettier-ignore
+contract ShopPayment is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
   mapping(string => Order) private orders;
   mapping(address => string[]) private userOrders;
 
@@ -47,13 +43,10 @@ contract ShopPayment is
   event Withdrawn(uint256 amount);
 
   /// @notice Initializer function (replaces constructor for upgradeable contracts)
-  /// @param _owner Address of the contract owner
-  function initialize(address _owner) public initializer {
-    __Ownable_init(); // Initialize Ownable
+  function initialize() public initializer {
+    __Ownable_init(msg.sender); // Initialize Ownable
     __ReentrancyGuard_init(); // Initialize ReentrancyGuard
     __UUPSUpgradeable_init(); // Initialize UUPSUpgradeable
-
-    transferOwnership(_owner); // Set the owner
   }
 
   /// @notice Required by UUPSUpgradeable to authorize upgrades
@@ -158,9 +151,4 @@ contract ShopPayment is
   ) external view returns (string[] memory) {
     return userOrders[_buyer];
   }
-
-  // Fallback và receive native token
-  receive() external payable {}
-
-  fallback() external payable {}
 }
