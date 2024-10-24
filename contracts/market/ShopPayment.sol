@@ -28,8 +28,8 @@ struct Order {
 
 // prettier-ignore
 contract ShopPayment is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
-  mapping(string => Order) private orders;
-  mapping(address => string[]) private userOrders;
+  mapping(string => Order) internal orders;
+  mapping(address => string[]) internal userOrders;
 
   uint256 public totalWithdrawable;
 
