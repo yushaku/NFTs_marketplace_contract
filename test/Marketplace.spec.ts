@@ -1,6 +1,6 @@
-import { expect } from "chai";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
-import { MaxUint256, Signer, parseEther } from "ethers";
+import { expect } from "chai";
+import { MaxUint256, Signer } from "ethers";
 import { ethers } from "hardhat";
 import { before } from "mocha";
 import {
@@ -13,10 +13,7 @@ import {
   YuNftMarketplace,
   YuNftMarketplace__factory,
 } from "../typechain";
-
-function toWei(value: number) {
-  return parseEther(value.toString());
-}
+import { toWei } from "./helper";
 
 describe("Yushaku Marketplace", () => {
   let nft: NFTCollection;

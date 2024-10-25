@@ -1,0 +1,16 @@
+export enum PROPOCAL_STATUS {
+  PENDING,
+  ACTIVE,
+  CANCELED,
+  DEFEATED,
+  SUCCEEDED,
+  QUEUED,
+  EXPIRED,
+  EXECUTED,
+}
+
+export const VOTE = {
+  AGAINST: 1n,
+  FOR: 2n,
+  ABSTAIN: 3n,
+};

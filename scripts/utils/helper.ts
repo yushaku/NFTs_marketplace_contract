@@ -16,6 +16,7 @@ export const writeDownAddress = async (
     rawData = fs.readFileSync(addressFile);
     const object = JSON.parse(rawData.toString() || "{}");
     object[key] = address;
+    console.log(`update ${key} = ${address}`);
     fs.writeFileSync(addressFile, JSON.stringify(object, null, 2));
   } catch (error) {
     fs.writeFileSync(addressFile, `{"${key}": "${address}"}`);

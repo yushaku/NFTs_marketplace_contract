@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IGovernor, Governor } from "@openzeppelin/contracts/governance/Governor.sol";
-import { GovernorCountingSimple } from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-import { GovernorVotes } from "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
-import { GovernorVotesQuorumFraction } from "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import { GovernorTimelockControl } from "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
-import { TimelockController } from "@openzeppelin/contracts/governance/TimelockController.sol";
-import { IVotes } from "@openzeppelin/contracts/governance/utils/IVotes.sol";
-import { IERC165 } from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import "@openzeppelin/contracts/governance/Governor.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 
 contract YuGovernor is
   Governor,
@@ -21,7 +18,7 @@ contract YuGovernor is
     IVotes _token,
     TimelockController _timelock
   )
-    Governor("MyGovernor")
+    Governor("YuGovernor")
     GovernorVotes(_token)
     GovernorVotesQuorumFraction(4)
     GovernorTimelockControl(_timelock)
@@ -39,7 +36,18 @@ contract YuGovernor is
     return 0;
   }
 
-  // The functions below are overrides required by Solidity.
+  // The following functions are overrides required by Solidity.
+  function quorum(
+    uint256 blockNumber
+  )
+    public
+    view
+    override(Governor, GovernorVotesQuorumFraction)
+    returns (uint256)
+  {
+    return super.quorum(blockNumber);
+  }
+
   function state(
     uint256 proposalId
   )
@@ -53,13 +61,7 @@ contract YuGovernor is
 
   function proposalNeedsQueuing(
     uint256 proposalId
-  )
-    public
-    view
-    virtual
-    override(Governor, GovernorTimelockControl)
-    returns (bool)
-  {
+  ) public view override(Governor, GovernorTimelockControl) returns (bool) {
     return super.proposalNeedsQueuing(proposalId);
   }
 
