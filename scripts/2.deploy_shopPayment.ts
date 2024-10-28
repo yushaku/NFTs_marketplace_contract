@@ -8,37 +8,33 @@ async function main(step: number) {
   const network = await ethers.provider.getNetwork();
 
   if (step <= 1) {
+    console.log(`deployer ${owner.address}`);
     console.log("Deploying ShopPayment...");
-    const ShopPayment = await ethers.getContractFactory("ShopPayment");
 
     // Deploy the upgradeable contract using a UUPS proxy
-    const shopPayment = await upgrades.deployProxy(
-      ShopPayment,
-      [owner.address],
-      {
-        initializer: "initialize",
-        kind: "uups", // Specifies the UUPS proxy pattern
-      },
-    );
+    const ShopPayment = await ethers.getContractFactory("ShopPayment");
+    const shopPayment = await upgrades.deployProxy(ShopPayment, [], {
+      initializer: "initialize",
+      kind: "uups",
+    });
 
     const address = await shopPayment.getAddress();
-    console.info({ address });
-
     writeDownAddress(ContractName.ShopPayment, address, network.name);
 
     await sleep(20_000);
   }
 
-  if (step <= 2) {
-    const address = getAddress(ContractName.ShopPayment, network.name);
-    await verifyContract(address, []);
+  if (step <= 1.5) {
+    const proxy = getAddress(ContractName.ShopPayment, network.name);
+    const implement = await upgrades.erc1967.getImplementationAddress(proxy);
+    console.info("Implementation Address:", implement);
 
-    const implementation = "0x4E3DdcCeEf165fC30F876cf81b4d7a80C2A1A7bD";
-    await verifyContract(implementation, []);
+    await verifyContract(proxy, []);
+    await verifyContract(implement, []);
   }
 }
 
-main(1)
+main(1.5)
   .then(() => process.exit(0))
   .catch((error: Error) => {
     console.error(error);
